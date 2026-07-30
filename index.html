@@ -989,7 +989,6 @@ html{ scroll-behavior:smooth; }
         </div>
         <div class="alert alert-danger py-2 small d-none" id="adminLoginError">Username หรือ Password ไม่ถูกต้อง</div>
         <button class="btn btn-gold w-100 py-2" type="submit"><i class="fa-solid fa-right-to-bracket me-2"></i>เข้าสู่ระบบ</button>
-        <p class="text-center small text-muted mt-3 mb-0">Demo: admin / admin1234</p>
       </form>
       <button class="btn btn-link w-100 mt-2 small" id="btnBackToSite">&larr; กลับสู่หน้าเว็บไซต์</button>
     </div>
@@ -1194,6 +1193,37 @@ html{ scroll-behavior:smooth; }
               </div>
             </div>
             <button type="submit" class="btn btn-gold mt-4"><i class="fa-solid fa-floppy-disk me-2"></i>บันทึกการตั้งค่า</button>
+          </form>
+        </div>
+
+        <div class="admin-card">
+          <h6 class="fw-bold mb-3"><i class="fa-solid fa-key me-2"></i>เปลี่ยนรหัสผ่าน Admin</h6>
+          <form id="changePasswordForm">
+            <div class="row g-3">
+              <div class="col-md-4">
+                <label class="form-label">Username</label>
+                <input type="text" class="form-control" id="pwUsername" required>
+              </div>
+              <div class="col-md-4">
+                <label class="form-label">รหัสผ่านปัจจุบัน</label>
+                <input type="password" class="form-control" id="pwCurrent" required>
+              </div>
+              <div class="col-md-4"></div>
+              <div class="col-md-6">
+                <label class="form-label">รหัสผ่านใหม่</label>
+                <input type="password" class="form-control" id="pwNew" minlength="6" required>
+                <div class="form-text">ความยาวอย่างน้อย 6 ตัวอักษร</div>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">ยืนยันรหัสผ่านใหม่</label>
+                <input type="password" class="form-control" id="pwConfirm" minlength="6" required>
+              </div>
+            </div>
+            <div class="alert alert-danger py-2 small mt-3 d-none" id="pwError"></div>
+            <div class="alert alert-success py-2 small mt-3 d-none" id="pwSuccess"></div>
+            <button type="submit" class="btn btn-navy-outline mt-2" style="color:var(--navy-900);border-color:var(--navy-900);">
+              <i class="fa-solid fa-rotate me-2"></i>เปลี่ยนรหัสผ่าน
+            </button>
           </form>
         </div>
       </div>
@@ -1593,11 +1623,14 @@ function goToSite(){
   window.scrollTo(0,0);
 }
 
+// ข้อมูลบัญชีผู้ดูแลระบบ (เก็บในหน่วยความจำ - สามารถเปลี่ยนรหัสผ่านได้ในหน้าตั้งค่า)
+let adminCredentials = { username:'admin', password:'admin1234' };
+
 document.getElementById('adminLoginForm').addEventListener('submit', function(e){
   e.preventDefault();
   const u = document.getElementById('adminUsername').value.trim();
   const p = document.getElementById('adminPassword').value.trim();
-  if(u === 'admin' && p === 'admin1234'){
+  if(u === adminCredentials.username && p === adminCredentials.password){
     document.getElementById('adminLoginError').classList.add('d-none');
     document.getElementById('adminLoginScreen').classList.add('d-none');
     document.getElementById('adminDashboard').classList.remove('d-none');
@@ -1611,6 +1644,43 @@ document.getElementById('btnAdminLogout').addEventListener('click', ()=>{
   document.getElementById('adminDashboard').classList.add('d-none');
   document.getElementById('adminLoginScreen').classList.remove('d-none');
   document.getElementById('adminLoginForm').reset();
+});
+
+/* เปลี่ยนรหัสผ่าน Admin */
+document.getElementById('changePasswordForm').addEventListener('submit', function(e){
+  e.preventDefault();
+  const username = document.getElementById('pwUsername').value.trim();
+  const current = document.getElementById('pwCurrent').value;
+  const newPw = document.getElementById('pwNew').value;
+  const confirmPw = document.getElementById('pwConfirm').value;
+  const errBox = document.getElementById('pwError');
+  const okBox = document.getElementById('pwSuccess');
+  errBox.classList.add('d-none'); okBox.classList.add('d-none');
+
+  if(current !== adminCredentials.password){
+    errBox.textContent = 'รหัสผ่านปัจจุบันไม่ถูกต้อง';
+    errBox.classList.remove('d-none');
+    return;
+  }
+  if(newPw.length < 6){
+    errBox.textContent = 'รหัสผ่านใหม่ต้องมีความยาวอย่างน้อย 6 ตัวอักษร';
+    errBox.classList.remove('d-none');
+    return;
+  }
+  if(newPw !== confirmPw){
+    errBox.textContent = 'รหัสผ่านใหม่และการยืนยันไม่ตรงกัน';
+    errBox.classList.remove('d-none');
+    return;
+  }
+
+  adminCredentials.username = username || adminCredentials.username;
+  adminCredentials.password = newPw;
+
+  okBox.textContent = 'เปลี่ยนรหัสผ่านสำเร็จ กรุณาใช้รหัสผ่านใหม่ในการเข้าสู่ระบบครั้งถัดไป';
+  okBox.classList.remove('d-none');
+  this.reset();
+  document.getElementById('pwUsername').value = adminCredentials.username;
+  showToast('เปลี่ยนรหัสผ่าน Admin สำเร็จ');
 });
 
 // Sidebar navigation (panel switching)
@@ -1640,6 +1710,7 @@ function initAdminUI(){
   renderAdminCustomers();
   renderAdminPromotions();
   loadSettingsForm();
+  document.getElementById('pwUsername').value = adminCredentials.username;
   refreshDashboardStats();
   renderDashChart();
   renderRevenueChart('daily');
@@ -1792,6 +1863,7 @@ function renderAdminHouses(){
         </select>
       </td>
       <td>
+        <button class="btn btn-sm btn-outline-secondary me-1" onclick="uploadHouseImage(${i})" title="อัปโหลดรูป"><i class="fa-solid fa-image"></i></button>
         <button class="btn btn-sm btn-outline-danger" onclick="deleteHouse(${i})" title="ลบ"><i class="fa-solid fa-trash"></i></button>
       </td>
     </tr>`).join('');
@@ -1800,6 +1872,21 @@ function updateHouseField(i, field, value){
   houses[i][field] = (field==='price'||field==='capacity') ? Number(value) : value;
   showToast('อัปเดตข้อมูล ' + houses[i].name + ' สำเร็จ');
   renderHouses(); refreshDashboardStats();
+}
+function uploadHouseImage(i){
+  const input = document.createElement('input');
+  input.type='file'; input.accept='image/*';
+  input.onchange = ()=>{
+    const file = input.files[0]; if(!file) return;
+    const reader = new FileReader();
+    reader.onload = (e)=>{
+      houses[i].image = e.target.result;
+      renderAdminHouses(); renderHouses();
+      showToast('อัปโหลดรูปภาพสำเร็จ');
+    };
+    reader.readAsDataURL(file);
+  };
+  input.click();
 }
 function deleteHouse(i){
   if(!confirm('ยืนยันการลบ '+houses[i].name+' ?')) return;
