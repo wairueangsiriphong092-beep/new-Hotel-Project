@@ -2039,5 +2039,28 @@ renderRooms();
 renderHouses();
 renderPromotions();
 </script>
+     <script type="module">
+  // Import the functions you need from the SDKs you need
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-app.js";
+  import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-analytics.js";
+  // TODO: Add SDKs for Firebase products that you want to use
+  // https://firebase.google.com/docs/web/setup#available-libraries
+
+  // Your web app's Firebase configuration
+  // For Firebase JS SDK v7.20.0 and later, measurementId is optional
+  const firebaseConfig = {
+    apiKey: "AIzaSyAQYJFipWCWA33rSAxVe6bqopcEHYk0RJg",
+    authDomain: "new-hotel-project.firebaseapp.com",
+    projectId: "new-hotel-project",
+    storageBucket: "new-hotel-project.firebasestorage.app",
+    messagingSenderId: "372552654970",
+    appId: "1:372552654970:web:9e8d2419164cf4625f1bc3",
+    measurementId: "G-470QMTL9S6"
+  };
+
+  // Initialize Firebase
+  const app = initializeApp(firebaseConfig);
+  const analytics = getAnalytics(app);
+</script>
 </body>
 </html>
