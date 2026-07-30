@@ -2050,6 +2050,117 @@ renderServices();
 renderRooms();
 renderHouses();
 renderPromotions();
-</script>
+     <!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ฟอร์มจองห้องพัก</title>
+  <style>
+    body { font-family: 'Segoe UI', Tahoma, sans-serif; background: #f4f6f9; padding: 20px; }
+    .container { max-width: 500px; margin: auto; background: #fff; padding: 25px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+    .form-group { margin-bottom: 15px; }
+    label { display: block; font-weight: bold; margin-bottom: 5px; }
+    input, select { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+    .row { display: flex; gap: 10px; }
+    .row .form-group { flex: 1; }
+    button { width: 100%; padding: 12px; background: #1b4965; color: white; border: none; border-radius: 4px; font-size: 16px; cursor: pointer; }
+    button:disabled { background: #ccc; }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <h2>ฟอร์มจองห้องพัก / บ้านพัก</h2>
+    <form id="bookingForm">
+      
+      <div class="form-group">
+        <label>ชื่อลูกค้า:</label>
+        <input type="text" id="guestName" required placeholder="กรอกชื่อ-นามสกุล">
+      </div>
+
+      <div class="form-group">
+        <label>เบอร์โทรศัพท์:</label>
+        <input type="tel" id="phone" required placeholder="08X-XXX-XXXX">
+      </div>
+
+      <div class="form-group">
+        <label>ประเภทห้อง / บ้านพัก:</label>
+        <select id="roomType">
+          <option value="ห้อง Deluxe">ห้อง Deluxe</option>
+          <option value="ห้อง Suite">ห้อง Suite</option>
+          <option value="บ้านพักเป็นหลัง (Pool Villa)">บ้านพักเป็นหลัง (Pool Villa)</option>
+        </select>
+      </div>
+
+      <div class="row">
+        <div class="form-group">
+          <label>วัน Check In:</label>
+          <input type="date" id="checkIn" required>
+        </div>
+        <div class="form-group">
+          <label>วัน Check Out:</label>
+          <input type="date" id="checkOut" required>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="form-group">
+          <label>จำนวนผู้เข้าพัก:</label>
+          <input type="number" id="guests" min="1" value="1" required>
+        </div>
+        <div class="form-group">
+          <label>ราคารวม (บาท):</label>
+          <input type="number" id="price" min="0" placeholder="0" required>
+        </div>
+      </div>
+
+      <button type="submit" id="btnSubmit">ยืนยันการจอง</button>
+    </form>
+  </div>
+
+  <script>
+    // ⚠️ นำ Web App URL ที่คัดลอกมาจาก Google Apps Script มาวางแทนที่ตรงนี้
+    const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxYeXrQtJH0T-Q4PW8OdR4FT6GUdJN-qgQcHdO684-uXbIN66ZQ85X7RQCy3d3-213G/exec";
+
+    document.getElementById('bookingForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      
+      const btn = document.getElementById('btnSubmit');
+      btn.disabled = true;
+      btn.innerText = "กำลังส่งข้อมูล...";
+
+      // ดึงค่าจากช่องกรอกข้อมูล
+      const formData = {
+        guestName: document.getElementById('guestName').value,
+        phone: document.getElementById('phone').value,
+        roomType: document.getElementById('roomType').value,
+        checkIn: document.getElementById('checkIn').value,
+        checkOut: document.getElementById('checkOut').value,
+        guests: document.getElementById('guests').value,
+        price: document.getElementById('price').value
+      };
+
+      // ส่งข้อมูลไปยัง Google Apps Script
+      fetch(GAS_WEB_APP_URL, {
+        method: 'POST',
+        mode: 'no-cors', // ป้องกันการติดปัญหาข้ามโดเมน (CORS)
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData)
+      })
+      .then(() => {
+        alert('บันทึกข้อมูลการจองเรียบร้อยแล้ว!');
+        document.getElementById('bookingForm').reset();
+        btn.disabled = false;
+        btn.innerText = "ยืนยันการจอง";
+      })
+      .catch(error => {
+        console.error('Error:', error);
+        alert('เกิดข้อผิดพลาดในการส่งข้อมูล');
+        btn.disabled = false;
+        btn.innerText = "ยืนยันการจอง";
+      });
+    });
+  </script>
 </body>
 </html>
