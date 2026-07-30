@@ -900,7 +900,7 @@ html{ scroll-behavior:smooth; }
                 <input type="radio" class="btn-check" name="stayType" id="stayOvernight" value="overnight" checked>
                 <label class="btn btn-outline-secondary" for="stayOvernight"><i class="fa-solid fa-moon me-1"></i> ค้างคืน (550 บาท/คืน)</label>
                 <input type="radio" class="btn-check" name="stayType" id="stayTemp" value="temporary">
-                <label class="btn btn-outline-secondary" for="stayTemp"><i class="fa-solid fa-clock me-1"></i> ชั่วคราว (250 บาท)</label>
+                <label class="btn btn-outline-secondary" for="stayTemp"><i class="fa-solid fa-clock me-1"></i> ชั่วคราว (220 บาท)</label>
               </div>
             </div>
             <div class="col-md-12">
@@ -1916,7 +1916,7 @@ function deleteHouse(i){
 }
 document.getElementById('btnAddHouse').addEventListener('click', ()=>{
   const n = houses.length+1;
-  houses.push({ id:'H'+Date.now(), name:'บ้านพัก หลังที่ '+n, image:HOUSE_IMAGES[(houses.length)%HOUSE_IMAGES.length], price:1000, capacity:4, amenities:['แอร์','WiFi'], status:'ว่าง' });
+  houses.push({ id:'H'+Date.now(), name:'บ้านพัก หลังที่ '+n, image:HOUSE_IMAGES[(houses.length)%HOUSE_IMAGES.length], price:650, capacity:4, amenities:['แอร์','WiFi'], status:'ว่าง' });
   renderAdminHouses(); renderHouses();
   showToast('เพิ่มบ้านพักใหม่สำเร็จ');
 });
