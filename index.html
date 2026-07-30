@@ -871,11 +871,6 @@ html{ scroll-behavior:smooth; }
               <input type="tel" class="form-control" id="custPhone" placeholder="08xxxxxxxx" required>
               <div class="invalid-feedback">กรุณากรอกเบอร์โทรศัพท์ให้ถูกต้อง</div>
             </div>
-            <div class="col-md-12">
-              <label class="form-label">อีเมล <span class="text-danger">*</span></label>
-              <input type="email" class="form-control" id="custEmail" required>
-              <div class="invalid-feedback">กรุณากรอกอีเมลให้ถูกต้อง</div>
-            </div>
             <div class="col-md-6">
               <label class="form-label">วัน Check In <span class="text-danger">*</span></label>
               <input type="date" class="form-control" id="checkIn" required>
@@ -1132,7 +1127,7 @@ html{ scroll-behavior:smooth; }
           <h6 class="fw-bold mb-3">รายชื่อลูกค้า</h6>
           <div class="table-responsive">
             <table class="table table-hotel align-middle">
-              <thead><tr><th>ชื่อ</th><th>เบอร์โทร</th><th>อีเมล</th><th>จำนวนครั้งที่เข้าพัก</th></tr></thead>
+              <thead><tr><th>ชื่อ</th><th>เบอร์โทร</th><th>จำนวนครั้งที่เข้าพัก</th></tr></thead>
               <tbody id="customersAdminTable"></tbody>
             </table>
           </div>
@@ -1564,17 +1559,14 @@ document.getElementById('bookingForm').addEventListener('submit', function(e){
 
   const name = document.getElementById('custName').value.trim();
   const phone = document.getElementById('custPhone').value.trim();
-  const email = document.getElementById('custEmail').value.trim();
   const checkIn = document.getElementById('checkIn').value;
   const checkOut = document.getElementById('checkOut').value;
   const phoneOk = /^[0-9]{9,10}$/.test(phone);
-  const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 
   document.getElementById('custName').classList.toggle('is-invalid', !name);
   document.getElementById('custPhone').classList.toggle('is-invalid', !phoneOk);
-  document.getElementById('custEmail').classList.toggle('is-invalid', !emailOk);
 
-  if(!name || !phoneOk || !emailOk) valid = false;
+  if(!name || !phoneOk) valid = false;
 
   // Check In ต้องไม่ย้อนหลัง
   const checkInInvalid = !checkIn || checkIn < todayISO();
@@ -1601,7 +1593,7 @@ document.getElementById('bookingForm').addEventListener('submit', function(e){
 
   // เพิ่มเข้ารายการจอง (เชื่อมกับระบบ Admin)
   bookings.unshift({
-    code, name, phone, email,
+    code, name, phone,
     type: item.name,
     checkIn, checkOut: priceInfo.isTemp ? checkIn : checkOut,
     guests: document.getElementById('guestCount').value,
@@ -1953,12 +1945,12 @@ function updateBookingStatus(i, status){
 function renderAdminCustomers(){
   const map = {};
   bookings.forEach(b=>{
-    if(!map[b.phone]) map[b.phone] = { name:b.name, phone:b.phone, email:b.email, count:0 };
+    if(!map[b.phone]) map[b.phone] = { name:b.name, phone:b.phone, count:0 };
     map[b.phone].count++;
   });
   const tbody = document.getElementById('customersAdminTable');
   tbody.innerHTML = Object.values(map).map(c=>`
-    <tr><td>${c.name}</td><td>${c.phone}</td><td>${c.email}</td><td>${c.count}</td></tr>
+    <tr><td>${c.name}</td><td>${c.phone}</td><td>${c.count}</td></tr>
   `).join('');
 }
 
