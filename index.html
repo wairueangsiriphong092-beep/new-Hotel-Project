@@ -785,14 +785,14 @@ html{ scroll-behavior:smooth; }
         </div>
         <div class="col-lg-7">
           <iframe 
-  src="https://maps.google.com/maps?q=13.6999792,99.8592921&z=17&output=embed" 
-  width="600" 
-  height="450" 
-  style="border:0;" 
-  allowfullscreen="" 
-  loading="lazy" 
-  referrerpolicy="no-referrer-when-downgrade">
-</iframe>
+            src="https://maps.google.com/maps?q=13.6999792,99.8592921&z=17&output=embed" 
+            width="100%" 
+            height="350" 
+            style="border:0; border-radius: var(--radius-lg);" 
+            allowfullscreen="" 
+            loading="lazy" 
+            referrerpolicy="no-referrer-when-downgrade">
+          </iframe>
         </div>
       </div>
     </div>
@@ -830,7 +830,7 @@ html{ scroll-behavior:smooth; }
             <a href="#"><i class="fa-brands fa-line"></i></a>
             <a href="#"><i class="fa-solid fa-envelope"></i></a>
           </div>
-          <div class="small"><i class="fa-solid fa-phone me-2"></i>02-123-4567</div>
+          <div class="small"><i class="fa-solid fa-phone me-2"></i>085-1116645</div>
         </div>
       </div>
       <div class="footer-bottom text-center small">
@@ -854,7 +854,7 @@ html{ scroll-behavior:smooth; }
       </div>
       <div class="modal-body p-4">
         <form id="bookingForm" novalidate>
-          <input type="hidden" id="bookingType"><!-- room หรือ house -->
+          <input type="hidden" id="bookingType">
           <input type="hidden" id="bookingItemId">
           <div class="alert alert-secondary d-flex align-items-center gap-2 mb-4">
             <i class="fa-solid fa-circle-info"></i>
@@ -904,7 +904,6 @@ html{ scroll-behavior:smooth; }
             </div>
           </div>
 
-          <!-- คำนวณราคาอัตโนมัติ -->
           <div class="price-summary-box mt-4">
             <div class="d-flex justify-content-between small mb-1">
               <span>จำนวนคืน / ประเภท</span><span id="sumNights">-</span>
@@ -984,7 +983,7 @@ html{ scroll-behavior:smooth; }
       <form id="adminLoginForm">
         <div class="mb-3">
           <label class="form-label">Username</label>
-          <input type="text" class="form-control" id="adminUsername" placeholder="admin" required>
+          <input type="text" class="form-control" id="adminUsername" placeholder="admin1234" required>
         </div>
         <div class="mb-3">
           <label class="form-label">Password</label>
@@ -993,7 +992,7 @@ html{ scroll-behavior:smooth; }
         <div class="alert alert-danger py-2 small d-none" id="adminLoginError">Username หรือ Password ไม่ถูกต้อง</div>
         <button class="btn btn-gold w-100 py-2" type="submit"><i class="fa-solid fa-right-to-bracket me-2"></i>เข้าสู่ระบบ</button>
       </form>
-      <button class="btn btn-link w-100 mt-2 small" id="btnBackToSite">&larr; กลับสู่หน้าเว็บไซต์</button>
+      <button class="btn btn-link w-100 mt-2 small text-secondary" id="btnBackToSite">&larr; กลับสู่หน้าเว็บไซต์</button>
     </div>
   </div>
 
@@ -1113,7 +1112,7 @@ html{ scroll-behavior:smooth; }
           <div class="table-responsive">
             <table class="table table-hotel align-middle">
               <thead><tr>
-                <th>เลขที่จอง</th><th>ชื่อลูกค้า</th><th>เบอร์โทร</th><th>ประเภท</th><th>Check In</th><th>Check Out</th><th>สถานะ</th>
+                <th>เลขที่จอง</th><th>ชื่อลูกค้า</th><th>เบอร์โทร</th><th>ประเภท</th><th>Check In</th><th>Check Out</th><th>สถานะ</th><th>จัดการ</th>
               </tr></thead>
               <tbody id="bookingsAdminTable"></tbody>
             </table>
@@ -1168,31 +1167,19 @@ html{ scroll-behavior:smooth; }
             <div class="row g-3">
               <div class="col-md-6">
                 <label class="form-label">ชื่อโรงแรม</label>
-                <input type="text" class="form-control" id="setHotelName">
+                <input type="text" class="form-control" id="setHotelName" value="โรงแรมแฮปปี้ไนท์">
               </div>
               <div class="col-md-6">
                 <label class="form-label">เบอร์โทร</label>
-                <input type="text" class="form-control" id="setPhone">
+                <input type="text" class="form-control" id="setPhone" value="085-1116645">
               </div>
               <div class="col-md-6">
                 <label class="form-label">Email</label>
-                <input type="email" class="form-control" id="setEmail">
+                <input type="email" class="form-control" id="setEmail" value="info@happynight-hotel.com">
               </div>
               <div class="col-md-6">
                 <label class="form-label">Facebook</label>
                 <input type="text" class="form-control" id="setFacebook" placeholder="https://facebook.com/...">
-              </div>
-              <div class="col-md-6">
-                <label class="form-label">Logo (อัปโหลดไฟล์รูปภาพ)</label>
-                <input type="file" class="form-control" id="setLogo" accept="image/*">
-              </div>
-              <div class="col-md-6">
-                <label class="form-label">Banner (อัปโหลดไฟล์รูปภาพ)</label>
-                <input type="file" class="form-control" id="setBanner" accept="image/*">
-              </div>
-              <div class="col-md-12">
-                <label class="form-label">Google Map (ลิงก์ embed)</label>
-                <input type="text" class="form-control" id="setMap" placeholder="https://maps.google.com/...">
               </div>
             </div>
             <button type="submit" class="btn btn-gold mt-4"><i class="fa-solid fa-floppy-disk me-2"></i>บันทึกการตั้งค่า</button>
@@ -1244,28 +1231,12 @@ html{ scroll-behavior:smooth; }
 
 <script>
 /* ================================================================
-   DATA STORE (ในหน่วยความจำ - Demo เท่านั้น ไม่มีฐานข้อมูลจริง)
+   DATA STORE (ในหน่วยความจำ - Demo เท่านั้น)
 ================================================================ */
 
-// ข้อมูลห้องพัก 17 ห้อง
 const ROOM_IMAGES = [
-  'https://github.com/wairueangsiriphong092-beep/new-Hotel-Project/blob/main/477278122_122212116110228345_7375485736492268026_n.jpg?raw=true', // ห้องที่ 1
-  'https://raw.githubusercontent.com/wairueangsiriphong092-beep/new-Hotel-Project/refs/heads/main/482227637_122221904738228345_8058824664074887540_n%20(1).jpg', // ห้องที่ 2
-  'https://raw.githubusercontent.com/wairueangsiriphong092-beep/new-Hotel-Project/refs/heads/main/482227637_122221904738228345_8058824664074887540_n%20(1).jpg', // ห้องที่ 3
-  'https://raw.githubusercontent.com/wairueangsiriphong092-beep/new-Hotel-Project/refs/heads/main/482227637_122221904738228345_8058824664074887540_n%20(1).jpg', // ห้องที่ 4
-  'https://raw.githubusercontent.com/wairueangsiriphong092-beep/new-Hotel-Project/refs/heads/main/482227637_122221904738228345_8058824664074887540_n%20(1).jpg', // ห้องที่ 5
-  'https://raw.githubusercontent.com/wairueangsiriphong092-beep/new-Hotel-Project/refs/heads/main/482227637_122221904738228345_8058824664074887540_n%20(1).jpg', // ห้องที่ 6
-  'https://raw.githubusercontent.com/wairueangsiriphong092-beep/new-Hotel-Project/refs/heads/main/482227637_122221904738228345_8058824664074887540_n%20(1).jpg', // ห้องที่ 7
-  'https://raw.githubusercontent.com/wairueangsiriphong092-beep/new-Hotel-Project/refs/heads/main/482227637_122221904738228345_8058824664074887540_n%20(1).jpg', // ห้องที่ 8
-  'https://raw.githubusercontent.com/wairueangsiriphong092-beep/new-Hotel-Project/refs/heads/main/482227637_122221904738228345_8058824664074887540_n%20(1).jpg', // ห้องที่ 9
-  'https://raw.githubusercontent.com/wairueangsiriphong092-beep/new-Hotel-Project/refs/heads/main/482227637_122221904738228345_8058824664074887540_n%20(1).jpg', // ห้องที่ 10
-  'https://raw.githubusercontent.com/wairueangsiriphong092-beep/new-Hotel-Project/refs/heads/main/482227637_122221904738228345_8058824664074887540_n%20(1).jpg', // ห้องที่ 11
-  'https://raw.githubusercontent.com/wairueangsiriphong092-beep/new-Hotel-Project/refs/heads/main/482227637_122221904738228345_8058824664074887540_n%20(1).jpg', // ห้องที่ 12
-  'https://raw.githubusercontent.com/wairueangsiriphong092-beep/new-Hotel-Project/refs/heads/main/482227637_122221904738228345_8058824664074887540_n%20(1).jpg', // ห้องที่ 13
-  'https://raw.githubusercontent.com/wairueangsiriphong092-beep/new-Hotel-Project/refs/heads/main/482227637_122221904738228345_8058824664074887540_n%20(1).jpg', // ห้องที่ 14
-  'https://raw.githubusercontent.com/wairueangsiriphong092-beep/new-Hotel-Project/refs/heads/main/482227637_122221904738228345_8058824664074887540_n%20(1).jpg', // ห้องที่ 15
-  'https://raw.githubusercontent.com/wairueangsiriphong092-beep/new-Hotel-Project/refs/heads/main/482227637_122221904738228345_8058824664074887540_n%20(1).jpg', // ห้องที่ 16
-  'https://raw.githubusercontent.com/wairueangsiriphong092-beep/new-Hotel-Project/refs/heads/main/482227637_122221904738228345_8058824664074887540_n%20(1).jpg'  // ห้องที่ 17
+  'https://github.com/wairueangsiriphong092-beep/new-Hotel-Project/blob/main/477278122_122212116110228345_7375485736492268026_n.jpg?raw=true',
+  'https://raw.githubusercontent.com/wairueangsiriphong092-beep/new-Hotel-Project/refs/heads/main/482227637_122221904738228345_8058824664074887540_n%20(1).jpg'
 ];
 const STATUS_LIST = ['ว่าง','ว่าง','ว่าง','ว่าง','ว่าง'];
 
@@ -1279,28 +1250,24 @@ let rooms = Array.from({length:17}, (_,i)=>({
 }));
 
 const HOUSE_IMAGES = [
-  'https://github.com/wairueangsiriphong092-beep/new-Hotel-Project/blob/main/482348226_122221904036228345_1550407462700596135_n%20(1).jpg?raw=true',
-  'https://github.com/wairueangsiriphong092-beep/new-Hotel-Project/blob/main/482348226_122221904036228345_1550407462700596135_n%20(1).jpg?raw=true',
   'https://github.com/wairueangsiriphong092-beep/new-Hotel-Project/blob/main/482348226_122221904036228345_1550407462700596135_n%20(1).jpg?raw=true'
 ];
 let houses = Array.from({length:3}, (_,i)=>({
   id:'H'+(i+1),
   name:'บ้านพัก หลังที่ '+(i+1),
-  image: HOUSE_IMAGES[i],
+  image: HOUSE_IMAGES[0],
   price: 650,
   capacity: 4 + i*2,
   amenities: ['แอร์','ที่จอดรถ','ครัว','WiFi', i===2 ? 'สวนส่วนตัว':'ระเบียง'],
   status:'ว่าง'
 }));
 
-// โปรโมชั่น (demo)
 let promotions = [
   {id:1, title:'จองล่วงหน้า 7 วัน ลด 15%', desc:'สำหรับการจองห้องพักล่วงหน้าอย่างน้อย 7 วัน รับส่วนลดทันที 15%', tag:'HOT'},
   {id:2, title:'พัก 3 คืน จ่ายแค่ 2 คืน', desc:'สำหรับบ้านพักทุกหลัง เมื่อจองพัก 3 คืนขึ้นไป', tag:'ใหม่'},
   {id:3, title:'อาหารเช้าฟรี', desc:'เมื่อจองห้องพักผ่านหน้าเว็บไซต์นี้ รับอาหารเช้าฟรีทันที', tag:''}
 ];
 
-// รายการจอง (demo seed + จองจริงจากผู้ใช้จะถูกเพิ่มเข้ามา)
 let bookingCounter = 1005;
 let bookings = [
   {code:'BK1001', name:'สมชาย ใจดี', phone:'0812345678', email:'somchai@mail.com', type:'ห้องพัก 101', checkIn:'2026-08-01', checkOut:'2026-08-03', guests:2, total:1100, status:'ยืนยัน'},
@@ -1320,7 +1287,7 @@ function money(n){ return Number(n).toLocaleString('th-TH') + ' บาท'; }
 function todayISO(){ const d=new Date(); return d.toISOString().split('T')[0]; }
 function daysBetween(a,b){
   const d1 = new Date(a), d2 = new Date(b);
-  return Math.round((d2-d1)/(650*60*60*24));
+  return Math.max(1, Math.round((d2-d1)/(1000*60*60*24)));
 }
 function showToast(msg, type){
   const toastEl = document.getElementById('mainToast');
@@ -1331,12 +1298,18 @@ function showToast(msg, type){
 }
 
 /* ================================================================
-   PAGE LOAD / NAVBAR SCROLL / REVEAL ANIMATION
+   PAGE LOAD / INITIALIZATION
 ================================================================ */
 window.addEventListener('load', ()=>{
   setTimeout(()=> document.getElementById('loadingOverlay').classList.add('hide'), 500);
+  renderGallery();
+  renderServices();
+  renderRooms();
+  renderHouses();
+  renderPromotions();
 });
-document.getElementById('yearNow').textContent = new Date().getFullYear() + 543; // พ.ศ.
+
+document.getElementById('yearNow').textContent = new Date().getFullYear() + 543;
 
 window.addEventListener('scroll', ()=>{
   document.getElementById('mainNavbar').classList.toggle('scrolled', window.scrollY > 60);
@@ -1348,15 +1321,15 @@ const revealObserver = new IntersectionObserver((entries)=>{
 function observeReveal(el){ el.classList.add('reveal'); revealObserver.observe(el); }
 
 /* ================================================================
-   GALLERY
+   RENDER RENDERERS
 ================================================================ */
-const galleryData = [
-  {img:ROOM_IMAGES[0], label:'ห้องพักดีลักซ์', cls:'col-6 col-md-3', h:'100%'},
-  {img:HOUSE_IMAGES[0], label:'บ้านพักส่วนตัว', cls:'col-6 col-md-3', h:'100%'},
-  {img:'https://images.unsplash.com/photo-1571003123894-1f0594d2b5d9?q=80&w=800&auto=format&fit=crop', label:'สระว่ายน้ำ', cls:'col-6 col-md-3', h:'100%'},
-  {img:'https://images.unsplash.com/photo-1414235077428-338989a2e8c0?q=80&w=800&auto=format&fit=crop', label:'ห้องอาหาร', cls:'col-6 col-md-3', h:'100%'}
-];
 function renderGallery(){
+  const galleryData = [
+    {img:ROOM_IMAGES[0], label:'ห้องพักดีลักซ์', cls:'col-6 col-md-3'},
+    {img:HOUSE_IMAGES[0], label:'บ้านพักส่วนตัว', cls:'col-6 col-md-3'},
+    {img:'https://images.unsplash.com/photo-1571003123894-1f0594d2b5d9?q=80&w=800&auto=format&fit=crop', label:'สระว่ายน้ำ', cls:'col-6 col-md-3'},
+    {img:'https://images.unsplash.com/photo-1414235077428-338989a2e8c0?q=80&w=800&auto=format&fit=crop', label:'ห้องอาหาร', cls:'col-6 col-md-3'}
+  ];
   const c = document.getElementById('galleryContainer');
   c.innerHTML = galleryData.map(g=>`
     <div class="${g.cls}">
@@ -1367,16 +1340,13 @@ function renderGallery(){
     </div>`).join('');
 }
 
-/* ================================================================
-   SERVICES
-================================================================ */
-const servicesData = [
-  {icon:'fa-wifi', name:'WiFi ฟรี'},
-  {icon:'fa-square-parking', name:'ที่จอดรถ'},
-  {icon:'fa-snowflake', name:'แอร์ทุกห้อง'},
-  {icon:'fa-tv', name:'ทีวี'}
-];
 function renderServices(){
+  const servicesData = [
+    {icon:'fa-wifi', name:'WiFi ฟรี'},
+    {icon:'fa-square-parking', name:'ที่จอดรถ'},
+    {icon:'fa-snowflake', name:'แอร์ทุกห้อง'},
+    {icon:'fa-tv', name:'ทีวี'}
+  ];
   const c = document.getElementById('servicesContainer');
   c.innerHTML = servicesData.map(s=>`
     <div class="col-6 col-md-3">
@@ -1388,9 +1358,6 @@ function renderServices(){
   c.querySelectorAll('.reveal').forEach(el=>observeReveal(el));
 }
 
-/* ================================================================
-   RENDER ROOMS (หน้าเว็บ)
-================================================================ */
 function renderRooms(){
   const c = document.getElementById('roomsContainer');
   c.innerHTML = rooms.map((r,idx)=>`
@@ -1415,9 +1382,6 @@ function renderRooms(){
   c.querySelectorAll('.reveal').forEach(el=>observeReveal(el));
 }
 
-/* ================================================================
-   RENDER HOUSES (หน้าเว็บ)
-================================================================ */
 function renderHouses(){
   const c = document.getElementById('housesContainer');
   c.innerHTML = houses.map((h,idx)=>`
@@ -1442,9 +1406,6 @@ function renderHouses(){
   c.querySelectorAll('.reveal').forEach(el=>observeReveal(el));
 }
 
-/* ================================================================
-   RENDER PROMOTIONS
-================================================================ */
 function renderPromotions(){
   const c = document.getElementById('promotionsContainer');
   c.innerHTML = promotions.map(p=>`
@@ -1509,7 +1470,8 @@ document.getElementById('checkIn').addEventListener('change', ()=>{
 document.getElementById('checkOut').addEventListener('change', calcPrice);
 
 function currentSelection(){
-  const val = document.getElementById('roomTypeSelect').value; // "room:R101" or "house:H1"
+  const val = document.getElementById('roomTypeSelect').value;
+  if(!val) return {type:'', id:'', item:null};
   const [type, id] = val.split(':');
   const item = type==='room' ? rooms.find(r=>r.id===id) : houses.find(h=>h.id===id);
   return {type, id, item};
@@ -1528,16 +1490,16 @@ function updateBookingItemLabel(){
 
 function calcPrice(){
   const {type, item} = currentSelection();
-  if(!item) return;
+  if(!item) return {nights:0, total:0, isTemp:false};
   const checkIn = document.getElementById('checkIn').value;
   const checkOut = document.getElementById('checkOut').value;
-  const isTemp = type==='room' && document.querySelector('input[name="stayType"]:checked').value === 'temporary';
+  const stayTypeEl = document.querySelector('input[name="stayType"]:checked');
+  const isTemp = type==='room' && stayTypeEl && stayTypeEl.value === 'temporary';
 
-  let nights = 0, total = 0, unitLabel = '';
+  let nights = 0, total = 0;
 
   if(isTemp){
     total = item.tempPrice;
-    unitLabel = 'ชั่วคราว (เหมาจ่าย)';
     document.getElementById('sumNights').textContent = 'เข้าพักชั่วคราว';
     document.getElementById('sumUnitPrice').textContent = money(item.tempPrice);
   } else {
@@ -1551,10 +1513,8 @@ function calcPrice(){
   return {nights, total, isTemp};
 }
 
-/* ตรวจสอบข้อมูล + ยืนยันการจอง */
 document.getElementById('bookingForm').addEventListener('submit', function(e){
   e.preventDefault();
-  const form = this;
   let valid = true;
 
   const name = document.getElementById('custName').value.trim();
@@ -1568,14 +1528,13 @@ document.getElementById('bookingForm').addEventListener('submit', function(e){
 
   if(!name || !phoneOk) valid = false;
 
-  // Check In ต้องไม่ย้อนหลัง
   const checkInInvalid = !checkIn || checkIn < todayISO();
   document.getElementById('checkIn').classList.toggle('is-invalid', checkInInvalid);
   if(checkInInvalid) valid = false;
 
-  // Check Out ต้องมากกว่า Check In (ยกเว้นกรณีชั่วคราวที่อนุญาตวันเดียวกัน)
   const {type} = currentSelection();
-  const isTemp = type==='room' && document.querySelector('input[name="stayType"]:checked').value === 'temporary';
+  const stayTypeEl = document.querySelector('input[name="stayType"]:checked');
+  const isTemp = type==='room' && stayTypeEl && stayTypeEl.value === 'temporary';
   const checkOutInvalid = !checkOut || (!isTemp && checkOut <= checkIn) || (isTemp && checkOut < checkIn);
   document.getElementById('checkOut').classList.toggle('is-invalid', checkOutInvalid);
   if(checkOutInvalid) valid = false;
@@ -1591,7 +1550,6 @@ document.getElementById('bookingForm').addEventListener('submit', function(e){
   bookingCounter++;
   const code = 'BK' + bookingCounter;
 
-  // เพิ่มเข้ารายการจอง (เชื่อมกับระบบ Admin)
   bookings.unshift({
     code, name, phone,
     type: item.name,
@@ -1601,7 +1559,6 @@ document.getElementById('bookingForm').addEventListener('submit', function(e){
     status:'รอดำเนินการ'
   });
 
-  // แสดง Popup สรุปรายการจอง
   document.getElementById('summaryBookingCode').textContent = code;
   document.getElementById('summaryName').textContent = name;
   document.getElementById('summaryRoom').textContent = item.name;
@@ -1616,7 +1573,7 @@ document.getElementById('bookingForm').addEventListener('submit', function(e){
 });
 
 /* ================================================================
-   ADMIN: LOGIN / LOGOUT / NAVIGATION
+   ADMIN SYSTEM LOGIC
 ================================================================ */
 document.getElementById('btnGoAdmin').addEventListener('click', ()=> goToAdmin());
 document.getElementById('footerAdminLink').addEventListener('click', (e)=>{ e.preventDefault(); goToAdmin(); });
@@ -1635,7 +1592,6 @@ function goToSite(){
   window.scrollTo(0,0);
 }
 
-// ข้อมูลบัญชีผู้ดูแลระบบ (เก็บในหน่วยความจำ - สามารถเปลี่ยนรหัสผ่านได้ในหน้าตั้งค่า)
 let adminCredentials = { username:'admin1234', password:'admin1234' };
 
 document.getElementById('adminLoginForm').addEventListener('submit', function(e){
@@ -1658,7 +1614,6 @@ document.getElementById('btnAdminLogout').addEventListener('click', ()=>{
   document.getElementById('adminLoginForm').reset();
 });
 
-/* เปลี่ยนรหัสผ่าน Admin */
 document.getElementById('changePasswordForm').addEventListener('submit', function(e){
   e.preventDefault();
   const username = document.getElementById('pwUsername').value.trim();
@@ -1695,7 +1650,6 @@ document.getElementById('changePasswordForm').addEventListener('submit', functio
   showToast('เปลี่ยนรหัสผ่าน Admin สำเร็จ');
 });
 
-// Sidebar navigation (panel switching)
 document.querySelectorAll('.admin-nav-link[data-panel]').forEach(link=>{
   link.addEventListener('click', ()=>{
     document.querySelectorAll('.admin-nav-link[data-panel]').forEach(l=>l.classList.remove('active'));
@@ -1710,9 +1664,6 @@ document.getElementById('btnToggleSidebar').addEventListener('click', ()=>{
   document.getElementById('adminSidebar').classList.toggle('show');
 });
 
-/* ================================================================
-   ADMIN: DASHBOARD STATS
-================================================================ */
 let dashChartInstance, revenueChartInstance;
 
 function initAdminUI(){
@@ -1721,7 +1672,6 @@ function initAdminUI(){
   renderAdminBookings();
   renderAdminCustomers();
   renderAdminPromotions();
-  loadSettingsForm();
   document.getElementById('pwUsername').value = adminCredentials.username;
   refreshDashboardStats();
   renderDashChart();
@@ -1729,7 +1679,6 @@ function initAdminUI(){
 }
 
 function refreshAdminData(){
-  // เรียกใหม่เมื่อมีการจองใหม่จากหน้าเว็บ (ถ้า admin เปิดอยู่)
   if(!document.getElementById('adminDashboard').classList.contains('d-none')){
     renderAdminBookings();
     renderAdminCustomers();
@@ -1803,7 +1752,7 @@ document.getElementById('revenueRangeGroup').addEventListener('click', (e)=>{
 });
 
 /* ================================================================
-   ADMIN: จัดการห้องพัก
+   ADMIN: ROOM & HOUSE MANAGEMENT
 ================================================================ */
 function renderAdminRooms(){
   const tbody = document.getElementById('roomsAdminTable');
@@ -1819,7 +1768,6 @@ function renderAdminRooms(){
         </select>
       </td>
       <td>
-        <button class="btn btn-sm btn-outline-secondary me-1" onclick="uploadRoomImage(${i})" title="อัปโหลดรูป"><i class="fa-solid fa-image"></i></button>
         <button class="btn btn-sm btn-outline-danger" onclick="deleteRoom(${i})" title="ลบ"><i class="fa-solid fa-trash"></i></button>
       </td>
     </tr>`).join('');
@@ -1827,23 +1775,7 @@ function renderAdminRooms(){
 function updateRoomField(i, field, value){
   rooms[i][field] = (field==='price'||field==='tempPrice') ? Number(value) : value;
   showToast('อัปเดตข้อมูลห้อง ' + rooms[i].name + ' สำเร็จ');
-  renderRooms();
-  refreshDashboardStats();
-}
-function uploadRoomImage(i){
-  const input = document.createElement('input');
-  input.type='file'; input.accept='image/*';
-  input.onchange = ()=>{
-    const file = input.files[0]; if(!file) return;
-    const reader = new FileReader();
-    reader.onload = (e)=>{
-      rooms[i].image = e.target.result;
-      renderAdminRooms(); renderRooms();
-      showToast('อัปโหลดรูปภาพสำเร็จ');
-    };
-    reader.readAsDataURL(file);
-  };
-  input.click();
+  renderRooms(); refreshDashboardStats();
 }
 function deleteRoom(i){
   if(!confirm('ยืนยันการลบ '+rooms[i].name+' ?')) return;
@@ -1858,9 +1790,6 @@ document.getElementById('btnAddRoom').addEventListener('click', ()=>{
   showToast('เพิ่มห้องพักใหม่สำเร็จ');
 });
 
-/* ================================================================
-   ADMIN: จัดการบ้านพัก
-================================================================ */
 function renderAdminHouses(){
   const tbody = document.getElementById('housesAdminTable');
   tbody.innerHTML = houses.map((h,i)=>`
@@ -1875,7 +1804,6 @@ function renderAdminHouses(){
         </select>
       </td>
       <td>
-        <button class="btn btn-sm btn-outline-secondary me-1" onclick="uploadHouseImage(${i})" title="อัปโหลดรูป"><i class="fa-solid fa-image"></i></button>
         <button class="btn btn-sm btn-outline-danger" onclick="deleteHouse(${i})" title="ลบ"><i class="fa-solid fa-trash"></i></button>
       </td>
     </tr>`).join('');
@@ -1885,21 +1813,6 @@ function updateHouseField(i, field, value){
   showToast('อัปเดตข้อมูล ' + houses[i].name + ' สำเร็จ');
   renderHouses(); refreshDashboardStats();
 }
-function uploadHouseImage(i){
-  const input = document.createElement('input');
-  input.type='file'; input.accept='image/*';
-  input.onchange = ()=>{
-    const file = input.files[0]; if(!file) return;
-    const reader = new FileReader();
-    reader.onload = (e)=>{
-      houses[i].image = e.target.result;
-      renderAdminHouses(); renderHouses();
-      showToast('อัปโหลดรูปภาพสำเร็จ');
-    };
-    reader.readAsDataURL(file);
-  };
-  input.click();
-}
 function deleteHouse(i){
   if(!confirm('ยืนยันการลบ '+houses[i].name+' ?')) return;
   houses.splice(i,1);
@@ -1908,13 +1821,13 @@ function deleteHouse(i){
 }
 document.getElementById('btnAddHouse').addEventListener('click', ()=>{
   const n = houses.length+1;
-  houses.push({ id:'H'+Date.now(), name:'บ้านพัก หลังที่ '+n, image:HOUSE_IMAGES[(houses.length)%HOUSE_IMAGES.length], price:650, capacity:4, amenities:['แอร์','WiFi'], status:'ว่าง' });
+  houses.push({ id:'H'+Date.now(), name:'บ้านพัก หลังที่ '+n, image:HOUSE_IMAGES[0], price:650, capacity:4, amenities:['แอร์','WiFi'], status:'ว่าง' });
   renderAdminHouses(); renderHouses();
   showToast('เพิ่มบ้านพักใหม่สำเร็จ');
 });
 
 /* ================================================================
-   ADMIN: รายการจอง
+   ADMIN: BOOKINGS / CUSTOMERS / PROMOTIONS
 ================================================================ */
 function renderAdminBookings(){
   const tbody = document.getElementById('bookingsAdminTable');
@@ -1927,240 +1840,89 @@ function renderAdminBookings(){
       <td>${b.checkIn}</td>
       <td>${b.checkOut}</td>
       <td>
-        <select class="form-select form-select-sm" style="width:140px" onchange="updateBookingStatus(${i}, this.value)">
+        <select class="form-select form-select-sm" style="width:130px" onchange="updateBookingStatus(${i}, this.value)">
           ${['รอดำเนินการ','ยืนยัน','เข้าพัก','Checkout','ยกเลิก'].map(s=>`<option ${s===b.status?'selected':''}>${s}</option>`).join('')}
         </select>
+      </td>
+      <td>
+        <button class="btn btn-sm btn-outline-danger" onclick="deleteBooking(${i})"><i class="fa-solid fa-trash"></i></button>
       </td>
     </tr>`).join('');
 }
 function updateBookingStatus(i, status){
   bookings[i].status = status;
-  renderAdminBookings(); refreshDashboardStats();
-  showToast('อัปเดตสถานะการจอง ' + bookings[i].code + ' เป็น "' + status + '"');
+  refreshDashboardStats();
+  showToast('อัปเดตสถานะการจองสำเร็จ');
+}
+function deleteBooking(i){
+  if(!confirm('ยืนยันการลบรายการจอง '+bookings[i].code+' ?')) return;
+  bookings.splice(i,1);
+  renderAdminBookings();
+  refreshDashboardStats();
+  showToast('ลบรายการจองเรียบร้อย');
 }
 
-/* ================================================================
-   ADMIN: ลูกค้า
-================================================================ */
 function renderAdminCustomers(){
-  const map = {};
-  bookings.forEach(b=>{
-    if(!map[b.phone]) map[b.phone] = { name:b.name, phone:b.phone, count:0 };
-    map[b.phone].count++;
-  });
   const tbody = document.getElementById('customersAdminTable');
-  tbody.innerHTML = Object.values(map).map(c=>`
-    <tr><td>${c.name}</td><td>${c.phone}</td><td>${c.count}</td></tr>
-  `).join('');
+  const custMap = {};
+  bookings.forEach(b=>{
+    if(!custMap[b.phone]){ custMap[b.phone] = {name:b.name, phone:b.phone, count:0}; }
+    custMap[b.phone].count++;
+  });
+  tbody.innerHTML = Object.values(custMap).map(c=>`
+    <tr>
+      <td>${c.name}</td>
+      <td>${c.phone}</td>
+      <td><span class="badge bg-navy-soft text-white">${c.count} ครั้ง</span></td>
+    </tr>`).join('');
 }
 
-/* ================================================================
-   ADMIN: โปรโมชั่น
-================================================================ */
 function renderAdminPromotions(){
-  const c = document.getElementById('promoAdminList');
-  c.innerHTML = promotions.map((p,i)=>`
-    <div class="col-md-4">
-      <div class="border rounded-3 p-3 h-100">
-        <div class="d-flex justify-content-between mb-2">
-          <span class="badge" style="background:var(--gold-100);color:var(--navy-900);">${p.tag||'ทั่วไป'}</span>
-          <button class="btn btn-sm btn-outline-danger" onclick="deletePromo(${i})"><i class="fa-solid fa-trash"></i></button>
+  const container = document.getElementById('promoAdminList');
+  container.innerHTML = promotions.map((p,i)=>`
+    <div class="col-md-6">
+      <div class="p-3 border rounded-3 bg-light d-flex justify-content-between align-items-center">
+        <div>
+          <div class="fw-bold text-navy">${p.title}</div>
+          <div class="small text-muted">${p.desc}</div>
         </div>
-        <div class="fw-semibold mb-1">${p.title}</div>
-        <div class="small text-muted">${p.desc}</div>
+        <button class="btn btn-sm btn-outline-danger ms-2" onclick="deletePromo(${i})"><i class="fa-solid fa-trash"></i></button>
       </div>
     </div>`).join('');
 }
 function deletePromo(i){
   promotions.splice(i,1);
   renderAdminPromotions(); renderPromotions();
-  showToast('ลบโปรโมชั่นเรียบร้อยแล้ว');
+  showToast('ลบโปรโมชั่นเรียบร้อย');
 }
 document.getElementById('btnAddPromo').addEventListener('click', ()=>{
-  const title = prompt('ชื่อโปรโมชั่น:'); if(!title) return;
-  const desc = prompt('รายละเอียด:') || '';
-  promotions.push({id:Date.now(), title, desc, tag:'ใหม่'});
-  renderAdminPromotions(); renderPromotions();
-  showToast('เพิ่มโปรโมชั่นใหม่สำเร็จ');
+  const title = prompt('กรอกชื่อโปรโมชั่น:');
+  const desc = prompt('กรอกรายละเอียด:');
+  if(title && desc){
+    promotions.push({id:Date.now(), title, desc, tag:'ใหม่'});
+    renderAdminPromotions(); renderPromotions();
+    showToast('เพิ่มโปรโมชั่นสำเร็จ');
+  }
 });
 
-/* ================================================================
-   ADMIN: ตั้งค่าเว็บไซต์
-================================================================ */
-let siteSettings = {
-  hotelName:'โรงแรมแฮปปี้ไนท์',
-  phone:'02-123-4567, 081-234-5678',
-  email:'info@happynight-hotel.com',
-  facebook:'',
-  map:''
-};
-function loadSettingsForm(){
-  document.getElementById('setHotelName').value = siteSettings.hotelName;
-  document.getElementById('setPhone').value = siteSettings.phone;
-  document.getElementById('setEmail').value = siteSettings.email;
-  document.getElementById('setFacebook').value = siteSettings.facebook;
-  document.getElementById('setMap').value = siteSettings.map;
-}
+// ตั้งค่าเว็บไซต์
 document.getElementById('settingsForm').addEventListener('submit', function(e){
   e.preventDefault();
-  siteSettings.hotelName = document.getElementById('setHotelName').value.trim() || siteSettings.hotelName;
-  siteSettings.phone = document.getElementById('setPhone').value.trim();
-  siteSettings.email = document.getElementById('setEmail').value.trim();
-  siteSettings.facebook = document.getElementById('setFacebook').value.trim();
-  siteSettings.map = document.getElementById('setMap').value.trim();
+  const name = document.getElementById('setHotelName').value;
+  const phone = document.getElementById('setPhone').value;
+  const email = document.getElementById('setEmail').value;
 
-  // อัปเดตค่าบนหน้าเว็บไซต์ทันที (Live Update)
-  document.getElementById('hotelNameNav').textContent = siteSettings.hotelName;
-  document.getElementById('hotelNameHero').textContent = siteSettings.hotelName.replace('โรงแรม','').trim();
-  document.getElementById('hotelNameFooter').textContent = siteSettings.hotelName;
-  document.getElementById('hotelNameCopy').textContent = siteSettings.hotelName;
-  document.getElementById('hotelPhone').textContent = siteSettings.phone;
-  document.getElementById('hotelEmail').textContent = siteSettings.email;
-
-  // โลโก้
-  const logoFile = document.getElementById('setLogo').files[0];
-  if(logoFile){
-    const reader = new FileReader();
-    reader.onload = (e)=>{
-      document.querySelectorAll('.brand-icon').forEach(b=>{
-        b.innerHTML = `<img src="${e.target.result}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`;
-      });
-    };
-    reader.readAsDataURL(logoFile);
+  if(name){
+    document.getElementById('hotelNameNav').textContent = name;
+    document.getElementById('hotelNameHero').textContent = name.replace('โรงแรม','');
+    document.getElementById('hotelNameFooter').textContent = name;
+    document.getElementById('hotelNameCopy').textContent = name;
   }
-  // แบนเนอร์
-  const bannerFile = document.getElementById('setBanner').files[0];
-  if(bannerFile){
-    const reader = new FileReader();
-    reader.onload = (e)=>{
-      document.querySelector('.hero').style.backgroundImage =
-        `linear-gradient(180deg, rgba(8,27,52,.55) 0%, rgba(8,27,52,.75) 55%, var(--cream) 100%), url('${e.target.result}')`;
-    };
-    reader.readAsDataURL(bannerFile);
-  }
+  if(phone) document.getElementById('hotelPhone').textContent = phone;
+  if(email) document.getElementById('hotelEmail').textContent = email;
 
-  showToast('บันทึกการตั้งค่าเว็บไซต์สำเร็จ');
+  showToast('บันทึกการตั้งค่าเรียบร้อยแล้ว');
 });
-
-/* ================================================================
-   INIT (โหลดครั้งแรก)
-================================================================ */
-renderGallery();
-renderServices();
-renderRooms();
-renderHouses();
-renderPromotions();
-     <!DOCTYPE html>
-<html lang="th">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ฟอร์มจองห้องพัก</title>
-  <style>
-    body { font-family: 'Segoe UI', Tahoma, sans-serif; background: #f4f6f9; padding: 20px; }
-    .container { max-width: 500px; margin: auto; background: #fff; padding: 25px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
-    .form-group { margin-bottom: 15px; }
-    label { display: block; font-weight: bold; margin-bottom: 5px; }
-    input, select { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
-    .row { display: flex; gap: 10px; }
-    .row .form-group { flex: 1; }
-    button { width: 100%; padding: 12px; background: #1b4965; color: white; border: none; border-radius: 4px; font-size: 16px; cursor: pointer; }
-    button:disabled { background: #ccc; }
-  </style>
-</head>
-<body>
-
-  <div class="container">
-    <h2>ฟอร์มจองห้องพัก / บ้านพัก</h2>
-    <form id="bookingForm">
-      
-      <div class="form-group">
-        <label>ชื่อลูกค้า:</label>
-        <input type="text" id="guestName" required placeholder="กรอกชื่อ-นามสกุล">
-      </div>
-
-      <div class="form-group">
-        <label>เบอร์โทรศัพท์:</label>
-        <input type="tel" id="phone" required placeholder="08X-XXX-XXXX">
-      </div>
-
-      <div class="form-group">
-        <label>ประเภทห้อง / บ้านพัก:</label>
-        <select id="roomType">
-          <option value="ห้อง Deluxe">ห้อง Deluxe</option>
-          <option value="ห้อง Suite">ห้อง Suite</option>
-          <option value="บ้านพักเป็นหลัง (Pool Villa)">บ้านพักเป็นหลัง (Pool Villa)</option>
-        </select>
-      </div>
-
-      <div class="row">
-        <div class="form-group">
-          <label>วัน Check In:</label>
-          <input type="date" id="checkIn" required>
-        </div>
-        <div class="form-group">
-          <label>วัน Check Out:</label>
-          <input type="date" id="checkOut" required>
-        </div>
-      </div>
-
-      <div class="row">
-        <div class="form-group">
-          <label>จำนวนผู้เข้าพัก:</label>
-          <input type="number" id="guests" min="1" value="1" required>
-        </div>
-        <div class="form-group">
-          <label>ราคารวม (บาท):</label>
-          <input type="number" id="price" min="0" placeholder="0" required>
-        </div>
-      </div>
-
-      <button type="submit" id="btnSubmit">ยืนยันการจอง</button>
-    </form>
-  </div>
-
-  <script>
-    // ⚠️ นำ Web App URL ที่คัดลอกมาจาก Google Apps Script มาวางแทนที่ตรงนี้
-    const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxYeXrQtJH0T-Q4PW8OdR4FT6GUdJN-qgQcHdO684-uXbIN66ZQ85X7RQCy3d3-213G/exec";
-
-    document.getElementById('bookingForm').addEventListener('submit', function(e) {
-      e.preventDefault();
-      
-      const btn = document.getElementById('btnSubmit');
-      btn.disabled = true;
-      btn.innerText = "กำลังส่งข้อมูล...";
-
-      // ดึงค่าจากช่องกรอกข้อมูล
-      const formData = {
-        guestName: document.getElementById('guestName').value,
-        phone: document.getElementById('phone').value,
-        roomType: document.getElementById('roomType').value,
-        checkIn: document.getElementById('checkIn').value,
-        checkOut: document.getElementById('checkOut').value,
-        guests: document.getElementById('guests').value,
-        price: document.getElementById('price').value
-      };
-
-      // ส่งข้อมูลไปยัง Google Apps Script
-      fetch(GAS_WEB_APP_URL, {
-        method: 'POST',
-        mode: 'no-cors', // ป้องกันการติดปัญหาข้ามโดเมน (CORS)
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData)
-      })
-      .then(() => {
-        alert('บันทึกข้อมูลการจองเรียบร้อยแล้ว!');
-        document.getElementById('bookingForm').reset();
-        btn.disabled = false;
-        btn.innerText = "ยืนยันการจอง";
-      })
-      .catch(error => {
-        console.error('Error:', error);
-        alert('เกิดข้อผิดพลาดในการส่งข้อมูล');
-        btn.disabled = false;
-        btn.innerText = "ยืนยันการจอง";
-      });
-    });
-  </script>
+</script>
 </body>
 </html>
