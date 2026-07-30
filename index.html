@@ -1292,7 +1292,7 @@ let houses = Array.from({length:3}, (_,i)=>({
   id:'H'+(i+1),
   name:'บ้านพัก หลังที่ '+(i+1),
   image: HOUSE_IMAGES[i],
-  price: 1000,
+  price: 650,
   capacity: 4 + i*2,
   amenities: ['แอร์','ที่จอดรถ','ครัว','WiFi', i===2 ? 'สวนส่วนตัว':'ระเบียง'],
   status:'ว่าง'
@@ -1325,7 +1325,7 @@ function money(n){ return Number(n).toLocaleString('th-TH') + ' บาท'; }
 function todayISO(){ const d=new Date(); return d.toISOString().split('T')[0]; }
 function daysBetween(a,b){
   const d1 = new Date(a), d2 = new Date(b);
-  return Math.round((d2-d1)/(1000*60*60*24));
+  return Math.round((d2-d1)/(650*60*60*24));
 }
 function showToast(msg, type){
   const toastEl = document.getElementById('mainToast');
