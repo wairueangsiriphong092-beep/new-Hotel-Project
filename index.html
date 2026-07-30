@@ -1279,7 +1279,7 @@ let rooms = Array.from({length:17}, (_,i)=>({
   name:'ห้องพัก '+(101+i),
   image: ROOM_IMAGES[i % ROOM_IMAGES.length],
   price: 550,
-  tempPrice: 250,
+  tempPrice: 220,
   status: STATUS_LIST[i % STATUS_LIST.length]
 }));
 
@@ -1861,7 +1861,7 @@ function deleteRoom(i){
 }
 document.getElementById('btnAddRoom').addEventListener('click', ()=>{
   const nextNum = rooms.length ? Math.max(...rooms.map(r=>parseInt(r.name.replace(/\D/g,''))||100)) + 1 : 101;
-  rooms.push({ id:'R'+nextNum, name:'ห้องพัก '+nextNum, image:ROOM_IMAGES[rooms.length % ROOM_IMAGES.length], price:550, tempPrice:250, status:'ว่าง' });
+  rooms.push({ id:'R'+nextNum, name:'ห้องพัก '+nextNum, image:ROOM_IMAGES[rooms.length % ROOM_IMAGES.length], price:550, tempPrice:220, status:'ว่าง' });
   renderAdminRooms(); renderRooms(); refreshDashboardStats();
   showToast('เพิ่มห้องพักใหม่สำเร็จ');
 });
