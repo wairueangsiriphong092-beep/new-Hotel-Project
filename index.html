@@ -1,23 +1,6 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
-     <script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-  import { getFirestore, collection, addDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
-
-  // ตั้งค่า Config ที่ได้จาก Firebase Console
-  const firebaseConfig = {
-    apiKey: "YOUR_API_KEY",
-    authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
-    projectId: "YOUR_PROJECT_ID",
-    storageBucket: "YOUR_PROJECT_ID.appspot.com",
-    messagingSenderId: "SENDER_ID",
-    appId: "APP_ID"
-  };
-
-  const app = initializeApp(firebaseConfig);
-  const db = getFirestore(app);
-</script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>โรงแรมแฮปปี้ไนท์ | ระบบจองห้องพักออนไลน์</title>
@@ -1300,698 +1283,773 @@ const HOUSE_IMAGES = [
   'https://github.com/wairueangsiriphong092-beep/new-Hotel-Project/blob/main/482348226_122221904036228345_1550407462700596135_n%20(1).jpg?raw=true',
   'https://github.com/wairueangsiriphong092-beep/new-Hotel-Project/blob/main/482348226_122221904036228345_1550407462700596135_n%20(1).jpg?raw=true'
 ];
+let houses = Array.from({length:3}, (_,i)=>({
+  id:'H'+(i+1),
+  name:'บ้านพัก หลังที่ '+(i+1),
+  image: HOUSE_IMAGES[i],
+  price: 650,
+  capacity: 4 + i*2,
+  amenities: ['แอร์','ที่จอดรถ','ครัว','WiFi', i===2 ? 'สวนส่วนตัว':'ระเบียง'],
+  status:'ว่าง'
+}));
 
-let houses = [
-  { id: 'H1', name: 'บ้านพักหลังที่ 1', image: HOUSE_IMAGES[0], price: 1500, maxGuests: 4, amenities: ['2 ห้องนอน', '1 ห้องน้ำ', 'ห้องนั่งเล่น', 'ระเบียงส่วนตัว'], status: 'ว่าง' },
-  { id: 'H2', name: 'บ้านพักหลังที่ 2', image: HOUSE_IMAGES[1], price: 2000, maxGuests: 6, amenities: ['3 ห้องนอน', '2 ห้องน้ำ', 'ห้องครัว', 'ที่จอดรถ'], status: 'ว่าง' },
-  { id: 'H3', name: 'บ้านพักหลังที่ 3', image: HOUSE_IMAGES[2], price: 2500, maxGuests: 8, amenities: ['4 ห้องนอน', '3 ห้องน้ำ', 'สระว่ายน้ำส่วนตัว', 'เตาปิ้งย่าง'], status: 'ว่าง' }
-];
-
+// โปรโมชั่น (demo)
 let promotions = [
-  { id: 'P1', title: 'ส่วนลดรับต้นปี', discount: 'ลด 10%', detail: 'เมื่อจองล่วงหน้าอย่างน้อย 7 วัน', code: 'HAPPY2026' },
-  { id: 'P2', title: 'พักยาวสุดคุ้ม', discount: 'ฟรี 1 คืน', detail: 'เมื่อพักติดต่อกันตั้งแต่ 3 คืนขึ้นไป', code: 'STAY3FREE1' }
+  {id:1, title:'จองล่วงหน้า 7 วัน ลด 15%', desc:'สำหรับการจองห้องพักล่วงหน้าอย่างน้อย 7 วัน รับส่วนลดทันที 15%', tag:'HOT'},
+  {id:2, title:'พัก 3 คืน จ่ายแค่ 2 คืน', desc:'สำหรับบ้านพักทุกหลัง เมื่อจองพัก 3 คืนขึ้นไป', tag:'ใหม่'},
+  {id:3, title:'อาหารเช้าฟรี', desc:'เมื่อจองห้องพักผ่านหน้าเว็บไซต์นี้ รับอาหารเช้าฟรีทันที', tag:''}
 ];
 
-let bookings = [];
-let customers = [];
-let dashChartInstance = null;
-let revenueChartInstance = null;
+// รายการจอง (demo seed + จองจริงจากผู้ใช้จะถูกเพิ่มเข้ามา)
+let bookingCounter = 1005;
+let bookings = [
+  {code:'BK1001', name:'สมชาย ใจดี', phone:'0812345678', email:'somchai@mail.com', type:'ห้องพัก 101', checkIn:'2026-08-01', checkOut:'2026-08-03', guests:2, total:1100, status:'ยืนยัน'},
+  {code:'BK1002', name:'วิภา สุขใส', phone:'0898765432', email:'wipa@mail.com', type:'บ้านพัก หลังที่ 1', checkIn:'2026-08-05', checkOut:'2026-08-07', guests:4, total:2000, status:'รอดำเนินการ'},
+  {code:'BK1003', name:'อนุชา พงษ์พันธ์', phone:'0855551234', email:'anucha@mail.com', type:'ห้องพัก 105', checkIn:'2026-07-20', checkOut:'2026-07-21', guests:1, total:550, status:'Checkout'},
+  {code:'BK1004', name:'กมลชนก แสงทอง', phone:'0867778899', email:'kamon@mail.com', type:'ห้องพัก 110', checkIn:'2026-08-10', checkOut:'2026-08-10', guests:1, total:250, status:'ยกเลิก'}
+];
 
-let adminAccount = {
-  username: 'admin',
-  password: 'password123'
+const STATUS_COLOR = {
+  'รอดำเนินการ':'#d99a2b','ยืนยัน':'#2f9e6b','เข้าพัก':'#14396b','Checkout':'#5b6472','ยกเลิก':'#d1495b'
 };
 
 /* ================================================================
-   INITIALIZATION & EVENT LISTENERS
+   UTILITIES
 ================================================================ */
-document.addEventListener('DOMContentLoaded', () => {
-  document.getElementById('yearNow').textContent = new Date().getFullYear();
-
-  // Hide Loading Overlay
-  setTimeout(() => {
-    document.getElementById('loadingOverlay').classList.add('hide');
-  }, 500);
-
-  // Render Front-end Data
-  renderGallery();
-  renderServices();
-  renderRooms();
-  renderHouses();
-  renderPromotions();
-
-  // UI Event Listeners
-  window.addEventListener('scroll', handleNavbarScroll);
-  
-  document.getElementById('btnGoAdmin').addEventListener('click', showAdminLogin);
-  document.getElementById('footerAdminLink').addEventListener('click', (e) => {
-    e.preventDefault();
-    showAdminLogin();
-  });
-  document.getElementById('btnBackToSite').addEventListener('click', showSiteApp);
-
-  // Form Submission Listeners
-  document.getElementById('bookingForm').addEventListener('submit', handleBookingSubmit);
-  document.getElementById('adminLoginForm').addEventListener('submit', handleAdminLogin);
-  document.getElementById('changePasswordForm').addEventListener('submit', handleChangePassword);
-  document.getElementById('settingsForm').addEventListener('submit', handleSettingsSubmit);
-
-  // Calculation listeners for modal
-  document.getElementById('checkIn').addEventListener('change', calculateBookingPrice);
-  document.getElementById('checkOut').addEventListener('change', calculateBookingPrice);
-  document.getElementById('roomTypeSelect').addEventListener('change', calculateBookingPrice);
-  document.querySelectorAll('input[name="stayType"]').forEach(r => r.addEventListener('change', calculateBookingPrice));
-
-  // Admin Sidebar Nav Events
-  document.querySelectorAll('.admin-nav-link[data-panel]').forEach(link => {
-    link.addEventListener('click', function() {
-      const panelId = this.getAttribute('data-panel');
-      switchAdminPanel(panelId, this);
-    });
-  });
-
-  document.getElementById('btnAdminLogout').addEventListener('click', logoutAdmin);
-  document.getElementById('btnToggleSidebar').addEventListener('click', () => {
-    document.getElementById('adminSidebar').classList.toggle('show');
-  });
-
-  // Setup Admin Action Buttons
-  document.getElementById('btnAddRoom').addEventListener('click', () => alert('ฟังก์ชันเพิ่มห้องพัก (Demo)'));
-  document.getElementById('btnAddHouse').addEventListener('click', () => alert('ฟังก์ชันเพิ่มบ้านพัก (Demo)'));
-  document.getElementById('btnAddPromo').addEventListener('click', () => alert('ฟังก์ชันเพิ่มโปรโมชั่น (Demo)'));
-
-  // Revenue Range Filter
-  document.querySelectorAll('#revenueRangeGroup .btn').forEach(btn => {
-    btn.addEventListener('click', function() {
-      document.querySelectorAll('#revenueRangeGroup .btn').forEach(b => b.classList.remove('active'));
-      this.classList.add('active');
-      renderRevenueChart(this.getAttribute('data-range'));
-    });
-  });
-});
+function money(n){ return Number(n).toLocaleString('th-TH') + ' บาท'; }
+function todayISO(){ const d=new Date(); return d.toISOString().split('T')[0]; }
+function daysBetween(a,b){
+  const d1 = new Date(a), d2 = new Date(b);
+  return Math.round((d2-d1)/(650*60*60*24));
+}
+function showToast(msg, type){
+  const toastEl = document.getElementById('mainToast');
+  document.getElementById('toastMsg').textContent = msg;
+  toastEl.classList.remove('bg-success','bg-danger');
+  toastEl.classList.add(type === 'error' ? 'bg-danger' : 'bg-success');
+  new bootstrap.Toast(toastEl, {delay:2600}).show();
+}
 
 /* ================================================================
-   FRONTEND RENDER FUNCTIONS
+   PAGE LOAD / NAVBAR SCROLL / REVEAL ANIMATION
 ================================================================ */
-function handleNavbarScroll() {
-  const nav = document.getElementById('mainNavbar');
-  if (window.scrollY > 50) {
-    nav.classList.add('scrolled');
-  } else {
-    nav.classList.remove('scrolled');
-  }
-}
+window.addEventListener('load', ()=>{
+  setTimeout(()=> document.getElementById('loadingOverlay').classList.add('hide'), 500);
+});
+document.getElementById('yearNow').textContent = new Date().getFullYear() + 543; // พ.ศ.
 
-function renderGallery() {
-  const container = document.getElementById('galleryContainer');
-  const imgs = [
-    'https://images.unsplash.com/photo-1566073771259-6a8506099945?q=80&w=800&auto=format&fit=crop',
-    'https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?q=80&w=800&auto=format&fit=crop',
-    'https://images.unsplash.com/photo-1571896349842-33c89424de2d?q=80&w=800&auto=format&fit=crop'
-  ];
-  container.innerHTML = imgs.map((img, idx) => `
-    <div class="col-md-4 h-100">
+window.addEventListener('scroll', ()=>{
+  document.getElementById('mainNavbar').classList.toggle('scrolled', window.scrollY > 60);
+});
+
+const revealObserver = new IntersectionObserver((entries)=>{
+  entries.forEach(e=>{ if(e.isIntersecting){ e.target.classList.add('in-view'); } });
+},{threshold:.12});
+function observeReveal(el){ el.classList.add('reveal'); revealObserver.observe(el); }
+
+/* ================================================================
+   GALLERY
+================================================================ */
+const galleryData = [
+  {img:ROOM_IMAGES[0], label:'ห้องพักดีลักซ์', cls:'col-6 col-md-3', h:'100%'},
+  {img:HOUSE_IMAGES[0], label:'บ้านพักส่วนตัว', cls:'col-6 col-md-3', h:'100%'},
+  {img:'https://images.unsplash.com/photo-1571003123894-1f0594d2b5d9?q=80&w=800&auto=format&fit=crop', label:'สระว่ายน้ำ', cls:'col-6 col-md-3', h:'100%'},
+  {img:'https://images.unsplash.com/photo-1414235077428-338989a2e8c0?q=80&w=800&auto=format&fit=crop', label:'ห้องอาหาร', cls:'col-6 col-md-3', h:'100%'}
+];
+function renderGallery(){
+  const c = document.getElementById('galleryContainer');
+  c.innerHTML = galleryData.map(g=>`
+    <div class="${g.cls}">
       <div class="gallery-item h-100">
-        <img src="${img}" alt="Gallery ${idx+1}">
-        <div class="g-overlay"><span>บรรยากาศโรงแรม</span></div>
+        <img src="${g.img}" alt="${g.label}">
+        <div class="g-overlay">${g.label}</div>
       </div>
-    </div>
-  `).join('');
+    </div>`).join('');
 }
 
-function renderServices() {
-  const services = [
-    { icon: 'fa-wifi', title: 'ฟรี Wi-Fi Speed บูสต์', desc: 'เชื่อมต่ออินเทอร์เน็ตความเร็วสูงได้ทั่วทั้งโรงแรม' },
-    { icon: 'fa-parking', title: 'ที่จอดรถกว้างขวาง', desc: 'ระบบรักษาความปลอดภัย ปลอดภัยด้วยกล้อง CCTV' },
-    { icon: 'fa-utensils', title: 'อาหารเช้าอร่อยเลิศ', desc: 'เมนูหลากหลายทั้งไทยและสากล รังสรรค์ด้วยใจ' },
-    { icon: 'fa-clock', title: 'บริการตลอด 24 ชม.', desc: 'เจ้าหน้าที่ต้อนรับพร้อมช่วยเหลือและบริการตลอดเวลา' }
-  ];
-  document.getElementById('servicesContainer').innerHTML = services.map(s => `
-    <div class="col-lg-3 col-md-6">
-      <div class="service-card">
+/* ================================================================
+   SERVICES
+================================================================ */
+const servicesData = [
+  {icon:'fa-wifi', name:'WiFi ฟรี'},
+  {icon:'fa-square-parking', name:'ที่จอดรถ'},
+  {icon:'fa-snowflake', name:'แอร์ทุกห้อง'},
+  {icon:'fa-tv', name:'ทีวี'}
+];
+function renderServices(){
+  const c = document.getElementById('servicesContainer');
+  c.innerHTML = servicesData.map(s=>`
+    <div class="col-6 col-md-3">
+      <div class="service-card reveal">
         <div class="service-icon"><i class="fa-solid ${s.icon}"></i></div>
-        <h5 class="fw-bold mb-2" style="color:var(--navy-900);">${s.title}</h5>
-        <p class="text-muted small mb-0">${s.desc}</p>
+        <div class="fw-medium">${s.name}</div>
       </div>
-    </div>
-  `).join('');
+    </div>`).join('');
+  c.querySelectorAll('.reveal').forEach(el=>observeReveal(el));
 }
 
-function renderRooms() {
-  const container = document.getElementById('roomsContainer');
-  container.innerHTML = rooms.map(r => `
-    <div class="col-lg-4 col-md-6">
-      <div class="room-card">
+/* ================================================================
+   RENDER ROOMS (หน้าเว็บ)
+================================================================ */
+function renderRooms(){
+  const c = document.getElementById('roomsContainer');
+  c.innerHTML = rooms.map((r,idx)=>`
+    <div class="col-12 col-sm-6 col-lg-4 col-xl-3">
+      <div class="room-card reveal" style="animation-delay:${(idx%8)*0.06}s">
         <div class="room-img-wrap">
           <img src="${r.image}" alt="${r.name}">
           <span class="status-badge status-${r.status}">${r.status}</span>
-          <div class="room-price-tag">${r.price} ฿ / คืน</div>
+          <span class="room-price-tag">${r.price} บาท</span>
         </div>
         <div class="room-body">
-          <h5 class="room-name">${r.name}</h5>
-          <div class="room-meta"><i class="fa-solid fa-user-group me-1"></i> รองรับ 2 ท่าน · เตียงเดี่ยว/คู่</div>
-          <div class="d-flex justify-content-between align-items-baseline my-2">
-            <div class="price-line">${r.price} <small>บาท/คืน</small></div>
-            <div class="price-temp"><i class="fa-solid fa-clock me-1"></i>ชั่วคราว ${r.tempPrice} ฿</div>
-          </div>
-          <button class="btn btn-book w-100" onclick="openBookingModal('room', '${r.id}')" ${r.status !== 'ว่าง' ? 'disabled' : ''}>
-            ${r.status === 'ว่าง' ? '<i class="fa-solid fa-calendar-plus me-1"></i> จองห้องพัก' : 'ไม่ว่าง'}
+          <div class="room-name">${r.name}</div>
+          <div class="room-meta"><i class="fa-solid fa-users me-1"></i>เข้าพักได้ 2 ท่าน &nbsp;|&nbsp; <i class="fa-solid fa-bed me-1"></i>เตียงเดี่ยว/คู่</div>
+          <div class="price-line mb-1">${r.price} บาท <small>/ คืน</small></div>
+          <div class="price-temp mb-3"><i class="fa-solid fa-clock me-1"></i>ราคาชั่วคราว ${r.tempPrice} บาท</div>
+          <button class="btn btn-book" ${r.status!=='ว่าง' ? 'disabled' : ''} onclick="openBooking('room','${r.id}')">
+            ${r.status==='ว่าง' ? 'จองเลย' : 'ไม่ว่าง'}
           </button>
         </div>
       </div>
-    </div>
-  `).join('');
+    </div>`).join('');
+  c.querySelectorAll('.reveal').forEach(el=>observeReveal(el));
 }
 
-function renderHouses() {
-  const container = document.getElementById('housesContainer');
-  container.innerHTML = houses.map(h => `
-    <div class="col-lg-4 col-md-6">
-      <div class="house-card">
+/* ================================================================
+   RENDER HOUSES (หน้าเว็บ)
+================================================================ */
+function renderHouses(){
+  const c = document.getElementById('housesContainer');
+  c.innerHTML = houses.map((h,idx)=>`
+    <div class="col-12 col-md-6 col-lg-4">
+      <div class="house-card reveal" style="animation-delay:${idx*0.08}s">
         <div class="house-img-wrap">
           <img src="${h.image}" alt="${h.name}">
           <span class="status-badge status-${h.status}">${h.status}</span>
-          <div class="room-price-tag">${h.price} ฿ / คืน</div>
+          <span class="room-price-tag">${h.price} บาท</span>
         </div>
         <div class="house-body">
-          <h5 class="room-name">${h.name}</h5>
-          <div class="room-meta"><i class="fa-solid fa-user-group me-1"></i> พักได้สูงสุด ${h.maxGuests} ท่าน</div>
-          <div class="mb-3">
-            ${h.amenities.map(a => `<span class="house-amenity">${a}</span>`).join('')}
-          </div>
-          <div class="price-line mb-3">${h.price} <small>บาท/คืน</small></div>
-          <button class="btn btn-book w-100" onclick="openBookingModal('house', '${h.id}')" ${h.status !== 'ว่าง' ? 'disabled' : ''}>
-            ${h.status === 'ว่าง' ? '<i class="fa-solid fa-house-medical me-1"></i> จองบ้านพัก' : 'ไม่ว่าง'}
+          <div class="room-name">${h.name}</div>
+          <div class="room-meta"><i class="fa-solid fa-users me-1"></i>เข้าพักได้ ${h.capacity} ท่าน</div>
+          <div class="mb-2">${h.amenities.map(a=>`<span class="house-amenity">${a}</span>`).join('')}</div>
+          <div class="price-line mb-3">${h.price} บาท <small>/ คืน</small></div>
+          <button class="btn btn-book" ${h.status!=='ว่าง' ? 'disabled' : ''} onclick="openBooking('house','${h.id}')">
+            ${h.status==='ว่าง' ? 'จองเลย' : 'ไม่ว่าง'}
           </button>
         </div>
       </div>
-    </div>
-  `).join('');
-}
-
-function renderPromotions() {
-  const container = document.getElementById('promotionsContainer');
-  container.innerHTML = promotions.map(p => `
-    <div class="col-md-6">
-      <div class="promo-card p-4">
-        <div class="promo-ribbon">${p.discount}</div>
-        <h4 class="fw-bold mb-2" style="color:var(--navy-900);">${p.title}</h4>
-        <p class="text-muted small mb-3">${p.detail}</p>
-        <div class="d-inline-block bg-light px-3 py-2 rounded-3 border">
-          <span class="small text-muted me-2">รหัสส่วนลด:</span>
-          <strong class="text-danger" style="letter-spacing:1px;">${p.code}</strong>
-        </div>
-      </div>
-    </div>
-  `).join('');
+    </div>`).join('');
+  c.querySelectorAll('.reveal').forEach(el=>observeReveal(el));
 }
 
 /* ================================================================
-   BOOKING MODAL & LOGIC
-========================================================= */
-function openBookingModal(type, id) {
-  document.getElementById('bookingType').value = type;
-  document.getElementById('bookingItemId').value = id;
-
-  const select = document.getElementById('roomTypeSelect');
-  select.innerHTML = '';
-
-  const stayWrap = document.getElementById('stayTypeWrap');
-
-  if (type === 'room') {
-    stayWrap.classList.remove('d-none');
-    rooms.forEach(r => {
-      const opt = document.createElement('option');
-      opt.value = r.id;
-      opt.textContent = `${r.name} (${r.price} บ./คืน)`;
-      if (r.id === id) opt.selected = true;
-      select.appendChild(opt);
-    });
-  } else {
-    stayWrap.classList.add('d-none');
-    houses.forEach(h => {
-      const opt = document.createElement('option');
-      opt.value = h.id;
-      opt.textContent = `${h.name} (${h.price} บ./คืน)`;
-      if (h.id === id) opt.selected = true;
-      select.appendChild(opt);
-    });
-  }
-
-  // Set default dates
-  const today = new Date().toISOString().split('T')[0];
-  const tomorrow = new Date(Date.now() + 86400000).toISOString().split('T')[0];
-  document.getElementById('checkIn').value = today;
-  document.getElementById('checkOut').value = tomorrow;
-
-  calculateBookingPrice();
-
-  const modal = new bootstrap.Modal(document.getElementById('bookingModal'));
-  modal.show();
+   RENDER PROMOTIONS
+================================================================ */
+function renderPromotions(){
+  const c = document.getElementById('promotionsContainer');
+  c.innerHTML = promotions.map(p=>`
+    <div class="col-md-4">
+      <div class="promo-card p-4 h-100 reveal">
+        ${p.tag ? `<div class="promo-ribbon">${p.tag}</div>` : ''}
+        <i class="fa-solid fa-gift mb-3" style="font-size:1.8rem;color:var(--gold-500);"></i>
+        <h5 class="fw-bold" style="color:var(--navy-900);">${p.title}</h5>
+        <p class="text-muted small mb-0">${p.desc}</p>
+      </div>
+    </div>`).join('');
+  c.querySelectorAll('.reveal').forEach(el=>observeReveal(el));
 }
 
-function calculateBookingPrice() {
-  const type = document.getElementById('bookingType').value;
-  const itemId = document.getElementById('roomTypeSelect').value;
-  const inDate = new Date(document.getElementById('checkIn').value);
-  const outDate = new Date(document.getElementById('checkOut').value);
-  const stayType = document.querySelector('input[name="stayType"]:checked').value;
+/* ================================================================
+   BOOKING MODAL LOGIC
+================================================================ */
+const bookingModal = new bootstrap.Modal(document.getElementById('bookingModal'));
+const summaryModal = new bootstrap.Modal(document.getElementById('summaryModal'));
 
-  let unitPrice = 0;
-  let itemName = '';
-
-  if (type === 'room') {
-    const r = rooms.find(item => item.id === itemId);
-    if (r) {
-      itemName = r.name;
-      unitPrice = stayType === 'overnight' ? r.price : r.tempPrice;
+function populateRoomTypeSelect(preselectType, preselectId){
+  const sel = document.getElementById('roomTypeSelect');
+  sel.innerHTML = '';
+  const groupRoom = document.createElement('optgroup'); groupRoom.label='ห้องพัก';
+  rooms.forEach(r=>{
+    if(r.status==='ว่าง' || r.id===preselectId){
+      const opt = document.createElement('option');
+      opt.value = 'room:'+r.id; opt.textContent = r.name + ' (' + r.price + ' บาท/คืน)';
+      groupRoom.appendChild(opt);
     }
-  } else {
-    const h = houses.find(item => item.id === itemId);
-    if (h) {
-      itemName = h.name;
-      unitPrice = h.price;
+  });
+  const groupHouse = document.createElement('optgroup'); groupHouse.label='บ้านพัก';
+  houses.forEach(h=>{
+    if(h.status==='ว่าง' || h.id===preselectId){
+      const opt = document.createElement('option');
+      opt.value = 'house:'+h.id; opt.textContent = h.name + ' (' + h.price + ' บาท/คืน)';
+      groupHouse.appendChild(opt);
     }
-  }
-
-  document.getElementById('bookingItemName').textContent = itemName;
-
-  let nights = Math.ceil((outDate - inDate) / (1000 * 60 * 60 * 24));
-  if (isNaN(nights) || nights <= 0) nights = 1;
-
-  let total = 0;
-  if (type === 'room' && stayType === 'temporary') {
-    total = unitPrice;
-    document.getElementById('sumNights').textContent = 'ชั่วคราว (3 ชม.)';
-  } else {
-    total = unitPrice * nights;
-    document.getElementById('sumNights').textContent = `${nights} คืน`;
-  }
-
-  document.getElementById('sumUnitPrice').textContent = `${unitPrice} บาท`;
-  document.getElementById('sumTotal').textContent = `${total.toLocaleString()} บาท`;
+  });
+  sel.appendChild(groupRoom); sel.appendChild(groupHouse);
+  if(preselectType && preselectId){ sel.value = preselectType+':'+preselectId; }
 }
 
-function handleBookingSubmit(e) {
+function openBooking(type, id){
+  document.getElementById('bookingForm').reset();
+  document.getElementById('bookingForm').classList.remove('was-validated');
+  document.getElementById('checkIn').min = todayISO();
+  document.getElementById('checkOut').min = todayISO();
+  populateRoomTypeSelect(type, id);
+  toggleStayTypeVisibility();
+  updateBookingItemLabel();
+  calcPrice();
+  bookingModal.show();
+}
+
+document.getElementById('roomTypeSelect').addEventListener('change', ()=>{ toggleStayTypeVisibility(); updateBookingItemLabel(); calcPrice(); });
+document.querySelectorAll('input[name="stayType"]').forEach(el=> el.addEventListener('change', calcPrice));
+document.getElementById('checkIn').addEventListener('change', ()=>{
+  document.getElementById('checkOut').min = document.getElementById('checkIn').value;
+  calcPrice();
+});
+document.getElementById('checkOut').addEventListener('change', calcPrice);
+
+function currentSelection(){
+  const val = document.getElementById('roomTypeSelect').value; // "room:R101" or "house:H1"
+  const [type, id] = val.split(':');
+  const item = type==='room' ? rooms.find(r=>r.id===id) : houses.find(h=>h.id===id);
+  return {type, id, item};
+}
+
+function toggleStayTypeVisibility(){
+  const {type} = currentSelection();
+  document.getElementById('stayTypeWrap').style.display = type==='house' ? 'none' : 'block';
+  if(type==='house'){ document.getElementById('stayOvernight').checked = true; }
+}
+
+function updateBookingItemLabel(){
+  const {item} = currentSelection();
+  document.getElementById('bookingItemName').textContent = item ? item.name : '-';
+}
+
+function calcPrice(){
+  const {type, item} = currentSelection();
+  if(!item) return;
+  const checkIn = document.getElementById('checkIn').value;
+  const checkOut = document.getElementById('checkOut').value;
+  const isTemp = type==='room' && document.querySelector('input[name="stayType"]:checked').value === 'temporary';
+
+  let nights = 0, total = 0, unitLabel = '';
+
+  if(isTemp){
+    total = item.tempPrice;
+    unitLabel = 'ชั่วคราว (เหมาจ่าย)';
+    document.getElementById('sumNights').textContent = 'เข้าพักชั่วคราว';
+    document.getElementById('sumUnitPrice').textContent = money(item.tempPrice);
+  } else {
+    nights = (checkIn && checkOut) ? daysBetween(checkIn, checkOut) : 0;
+    if(nights < 0) nights = 0;
+    total = item.price * nights;
+    document.getElementById('sumNights').textContent = nights + ' คืน';
+    document.getElementById('sumUnitPrice').textContent = money(item.price) + ' / คืน';
+  }
+  document.getElementById('sumTotal').textContent = money(total);
+  return {nights, total, isTemp};
+}
+
+/* ตรวจสอบข้อมูล + ยืนยันการจอง */
+document.getElementById('bookingForm').addEventListener('submit', function(e){
   e.preventDefault();
-  const form = e.target;
-  if (!form.checkValidity()) {
-    form.classList.add('was-validated');
+  const form = this;
+  let valid = true;
+
+  const name = document.getElementById('custName').value.trim();
+  const phone = document.getElementById('custPhone').value.trim();
+  const checkIn = document.getElementById('checkIn').value;
+  const checkOut = document.getElementById('checkOut').value;
+  const phoneOk = /^[0-9]{9,10}$/.test(phone);
+
+  document.getElementById('custName').classList.toggle('is-invalid', !name);
+  document.getElementById('custPhone').classList.toggle('is-invalid', !phoneOk);
+
+  if(!name || !phoneOk) valid = false;
+
+  // Check In ต้องไม่ย้อนหลัง
+  const checkInInvalid = !checkIn || checkIn < todayISO();
+  document.getElementById('checkIn').classList.toggle('is-invalid', checkInInvalid);
+  if(checkInInvalid) valid = false;
+
+  // Check Out ต้องมากกว่า Check In (ยกเว้นกรณีชั่วคราวที่อนุญาตวันเดียวกัน)
+  const {type} = currentSelection();
+  const isTemp = type==='room' && document.querySelector('input[name="stayType"]:checked').value === 'temporary';
+  const checkOutInvalid = !checkOut || (!isTemp && checkOut <= checkIn) || (isTemp && checkOut < checkIn);
+  document.getElementById('checkOut').classList.toggle('is-invalid', checkOutInvalid);
+  if(checkOutInvalid) valid = false;
+
+  if(!valid){
+    showToast('กรุณากรอกข้อมูลให้ครบถ้วนและถูกต้อง', 'error');
     return;
   }
 
-  const name = document.getElementById('custName').value;
-  const phone = document.getElementById('custPhone').value;
-  const checkIn = document.getElementById('checkIn').value;
-  const checkOut = document.getElementById('checkOut').value;
-  const itemId = document.getElementById('roomTypeSelect').value;
-  const type = document.getElementById('bookingType').value;
-  const stayType = document.querySelector('input[name="stayType"]:checked').value;
-  
-  const code = 'BK' + Math.floor(1000 + Math.random() * 9000);
+  const {item} = currentSelection();
+  const priceInfo = calcPrice();
 
-  let itemName = '';
-  let unitPrice = 0;
+  bookingCounter++;
+  const code = 'BK' + bookingCounter;
 
-  if (type === 'room') {
-    const r = rooms.find(item => item.id === itemId);
-    if (r) {
-      itemName = r.name;
-      unitPrice = stayType === 'overnight' ? r.price : r.tempPrice;
-      r.status = 'ไม่ว่าง';
-    }
-  } else {
-    const h = houses.find(item => item.id === itemId);
-    if (h) {
-      itemName = h.name;
-      unitPrice = h.price;
-      h.status = 'ไม่ว่าง';
-    }
-  }
-
-  let nights = Math.ceil((new Date(checkOut) - new Date(checkIn)) / (1000 * 60 * 60 * 24));
-  if (isNaN(nights) || nights <= 0) nights = 1;
-
-  let total = (type === 'room' && stayType === 'temporary') ? unitPrice : unitPrice * nights;
-
-  // Record Booking
+  // เพิ่มเข้ารายการจอง (เชื่อมกับระบบ Admin)
   bookings.unshift({
-    code,
-    name,
-    phone,
-    item: itemName,
-    type: type === 'room' ? 'ห้องพัก' : 'บ้านพัก',
-    checkIn,
-    checkOut,
-    nights: (type === 'room' && stayType === 'temporary') ? 'ชั่วคราว' : nights,
-    total,
-    status: 'ยืนยันแล้ว'
+    code, name, phone,
+    type: item.name,
+    checkIn, checkOut: priceInfo.isTemp ? checkIn : checkOut,
+    guests: document.getElementById('guestCount').value,
+    total: priceInfo.total,
+    status:'รอดำเนินการ'
   });
 
-  // Record Customer
-  let c = customers.find(cust => cust.phone === phone);
-  if (c) {
-    c.count += 1;
-  } else {
-    customers.push({ name, phone, count: 1 });
-  }
-
-  // Refresh Views
-  renderRooms();
-  renderHouses();
-
-  // Hide Booking Modal
-  const modalEl = document.getElementById('bookingModal');
-  const modal = bootstrap.Modal.getInstance(modalEl);
-  if (modal) modal.hide();
-
-  // Show Summary
+  // แสดง Popup สรุปรายการจอง
   document.getElementById('summaryBookingCode').textContent = code;
   document.getElementById('summaryName').textContent = name;
-  document.getElementById('summaryRoom').textContent = itemName;
-  document.getElementById('summaryDates').textContent = `${checkIn} ถึง ${checkOut}`;
-  document.getElementById('summaryNights').textContent = (type === 'room' && stayType === 'temporary') ? 'ชั่วคราว' : `${nights} คืน`;
-  document.getElementById('summaryTotal').textContent = `${total.toLocaleString()} บาท`;
+  document.getElementById('summaryRoom').textContent = item.name;
+  document.getElementById('summaryDates').textContent = checkIn + ' ถึง ' + (priceInfo.isTemp ? checkIn : checkOut);
+  document.getElementById('summaryNights').textContent = priceInfo.isTemp ? 'ชั่วคราว' : (priceInfo.nights + ' คืน');
+  document.getElementById('summaryTotal').textContent = money(priceInfo.total);
 
-  const sumModal = new bootstrap.Modal(document.getElementById('summaryModal'));
-  sumModal.show();
+  bookingModal.hide();
+  setTimeout(()=> summaryModal.show(), 350);
 
-  form.reset();
-  form.classList.remove('was-validated');
-}
+  refreshAdminData();
+});
 
 /* ================================================================
-   ADMIN SYSTEM & PANEL SWITCHING
+   ADMIN: LOGIN / LOGOUT / NAVIGATION
 ================================================================ */
-function showAdminLogin() {
+document.getElementById('btnGoAdmin').addEventListener('click', ()=> goToAdmin());
+document.getElementById('footerAdminLink').addEventListener('click', (e)=>{ e.preventDefault(); goToAdmin(); });
+document.getElementById('btnBackToSite').addEventListener('click', ()=> goToSite());
+
+function goToAdmin(){
   document.getElementById('site-app').classList.add('d-none');
   document.getElementById('admin-app').classList.remove('d-none');
   document.getElementById('adminLoginScreen').classList.remove('d-none');
   document.getElementById('adminDashboard').classList.add('d-none');
+  window.scrollTo(0,0);
 }
-
-function showSiteApp() {
+function goToSite(){
   document.getElementById('admin-app').classList.add('d-none');
   document.getElementById('site-app').classList.remove('d-none');
+  window.scrollTo(0,0);
 }
 
-function handleAdminLogin(e) {
-  e.preventDefault();
-  const u = document.getElementById('adminUsername').value;
-  const p = document.getElementById('adminPassword').value;
-  const err = document.getElementById('adminLoginError');
+// ข้อมูลบัญชีผู้ดูแลระบบ (เก็บในหน่วยความจำ - สามารถเปลี่ยนรหัสผ่านได้ในหน้าตั้งค่า)
+let adminCredentials = { username:'admin1234', password:'admin1234' };
 
-  if (u === adminAccount.username && p === adminAccount.password) {
-    err.classList.add('d-none');
+document.getElementById('adminLoginForm').addEventListener('submit', function(e){
+  e.preventDefault();
+  const u = document.getElementById('adminUsername').value.trim();
+  const p = document.getElementById('adminPassword').value.trim();
+  if(u === adminCredentials.username && p === adminCredentials.password){
+    document.getElementById('adminLoginError').classList.add('d-none');
     document.getElementById('adminLoginScreen').classList.add('d-none');
     document.getElementById('adminDashboard').classList.remove('d-none');
-    initAdminData();
+    initAdminUI();
   } else {
-    err.classList.remove('d-none');
+    document.getElementById('adminLoginError').classList.remove('d-none');
   }
-}
+});
 
-function logoutAdmin() {
+document.getElementById('btnAdminLogout').addEventListener('click', ()=>{
+  document.getElementById('adminDashboard').classList.add('d-none');
+  document.getElementById('adminLoginScreen').classList.remove('d-none');
   document.getElementById('adminLoginForm').reset();
-  showSiteApp();
-}
+});
 
-function switchAdminPanel(panelId, element) {
-  document.querySelectorAll('.admin-nav-link').forEach(l => l.classList.remove('active'));
-  if (element) element.classList.add('active');
+/* เปลี่ยนรหัสผ่าน Admin */
+document.getElementById('changePasswordForm').addEventListener('submit', function(e){
+  e.preventDefault();
+  const username = document.getElementById('pwUsername').value.trim();
+  const current = document.getElementById('pwCurrent').value;
+  const newPw = document.getElementById('pwNew').value;
+  const confirmPw = document.getElementById('pwConfirm').value;
+  const errBox = document.getElementById('pwError');
+  const okBox = document.getElementById('pwSuccess');
+  errBox.classList.add('d-none'); okBox.classList.add('d-none');
 
-  document.querySelectorAll('.admin-panel').forEach(p => p.classList.remove('active'));
-  document.getElementById(panelId).classList.add('active');
+  if(current !== adminCredentials.password){
+    errBox.textContent = 'รหัสผ่านปัจจุบันไม่ถูกต้อง';
+    errBox.classList.remove('d-none');
+    return;
+  }
+  if(newPw.length < 6){
+    errBox.textContent = 'รหัสผ่านใหม่ต้องมีความยาวอย่างน้อย 6 ตัวอักษร';
+    errBox.classList.remove('d-none');
+    return;
+  }
+  if(newPw !== confirmPw){
+    errBox.textContent = 'รหัสผ่านใหม่และการยืนยันไม่ตรงกัน';
+    errBox.classList.remove('d-none');
+    return;
+  }
 
-  const titles = {
-    'panel-dashboard': 'Dashboard',
-    'panel-rooms': 'จัดการห้องพัก',
-    'panel-houses': 'จัดการบ้านพัก',
-    'panel-bookings': 'รายการจองทั้งหมด',
-    'panel-customers': 'รายชื่อลูกค้า',
-    'panel-revenue': 'รายงานรายได้',
-    'panel-promotions': 'จัดการโปรโมชั่น',
-    'panel-settings': 'ตั้งค่าเว็บไซต์'
-  };
-  document.getElementById('adminPanelTitle').textContent = titles[panelId] || 'Admin Panel';
+  adminCredentials.username = username || adminCredentials.username;
+  adminCredentials.password = newPw;
 
-  // Close Mobile Sidebar
-  document.getElementById('adminSidebar').classList.remove('show');
-}
+  okBox.textContent = 'เปลี่ยนรหัสผ่านสำเร็จ กรุณาใช้รหัสผ่านใหม่ในการเข้าสู่ระบบครั้งถัดไป';
+  okBox.classList.remove('d-none');
+  this.reset();
+  document.getElementById('pwUsername').value = adminCredentials.username;
+  showToast('เปลี่ยนรหัสผ่าน Admin สำเร็จ');
+});
 
-function initAdminData() {
-  updateDashboardStats();
+// Sidebar navigation (panel switching)
+document.querySelectorAll('.admin-nav-link[data-panel]').forEach(link=>{
+  link.addEventListener('click', ()=>{
+    document.querySelectorAll('.admin-nav-link[data-panel]').forEach(l=>l.classList.remove('active'));
+    link.classList.add('active');
+    document.querySelectorAll('.admin-panel').forEach(p=>p.classList.remove('active'));
+    document.getElementById(link.dataset.panel).classList.add('active');
+    document.getElementById('adminPanelTitle').textContent = link.textContent.trim();
+    document.getElementById('adminSidebar').classList.remove('show');
+  });
+});
+document.getElementById('btnToggleSidebar').addEventListener('click', ()=>{
+  document.getElementById('adminSidebar').classList.toggle('show');
+});
+
+/* ================================================================
+   ADMIN: DASHBOARD STATS
+================================================================ */
+let dashChartInstance, revenueChartInstance;
+
+function initAdminUI(){
   renderAdminRooms();
   renderAdminHouses();
   renderAdminBookings();
   renderAdminCustomers();
-  renderAdminPromos();
+  renderAdminPromotions();
+  loadSettingsForm();
+  document.getElementById('pwUsername').value = adminCredentials.username;
+  refreshDashboardStats();
   renderDashChart();
   renderRevenueChart('daily');
 }
 
-function updateDashboardStats() {
-  const availRooms = rooms.filter(r => r.status === 'ว่าง').length;
-  const availHouses = houses.filter(h => h.status === 'ว่าง').length;
-  document.getElementById('statAvailable').textContent = availRooms + availHouses;
-
-  const todayRevenue = bookings.reduce((sum, b) => sum + b.total, 0);
-  document.getElementById('statTodayRevenue').textContent = `${todayRevenue.toLocaleString()} ฿`;
-  document.getElementById('statMonthRevenue').textContent = `${todayRevenue.toLocaleString()} ฿`;
-
-  // Recent Bookings List
-  const recentList = document.getElementById('recentBookingsList');
-  if (bookings.length === 0) {
-    recentList.innerHTML = '<div class="text-muted">ยังไม่มีรายการจองใหม่</div>';
-  } else {
-    recentList.innerHTML = bookings.slice(0, 5).map(b => `
-      <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
-        <div>
-          <div class="fw-bold">${b.name} (${b.item})</div>
-          <div class="text-muted extra-small">${b.checkIn} - ${b.checkOut}</div>
-        </div>
-        <span class="badge bg-success">${b.total.toLocaleString()} ฿</span>
-      </div>
-    `).join('');
+function refreshAdminData(){
+  // เรียกใหม่เมื่อมีการจองใหม่จากหน้าเว็บ (ถ้า admin เปิดอยู่)
+  if(!document.getElementById('adminDashboard').classList.contains('d-none')){
+    renderAdminBookings();
+    renderAdminCustomers();
+    refreshDashboardStats();
   }
 }
 
-function renderAdminRooms() {
+function refreshDashboardStats(){
+  const available = rooms.filter(r=>r.status==='ว่าง').length;
+  document.getElementById('statAvailable').textContent = available;
+
+  const today = todayISO();
+  const todayRevenue = bookings.filter(b=>b.checkIn===today && b.status!=='ยกเลิก').reduce((s,b)=>s+Number(b.total),0);
+  document.getElementById('statTodayRevenue').textContent = money(todayRevenue);
+
+  const thisMonth = today.slice(0,7);
+  const monthRevenue = bookings.filter(b=>b.checkIn.slice(0,7)===thisMonth && b.status!=='ยกเลิก').reduce((s,b)=>s+Number(b.total),0);
+  document.getElementById('statMonthRevenue').textContent = money(monthRevenue);
+
+  const recentList = document.getElementById('recentBookingsList');
+  recentList.innerHTML = bookings.slice(0,5).map(b=>`
+    <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
+      <div><strong>${b.name}</strong><br><span class="text-muted">${b.type}</span></div>
+      <span class="badge-status" style="background:${STATUS_COLOR[b.status]}22; color:${STATUS_COLOR[b.status]};">${b.status}</span>
+    </div>`).join('');
+}
+
+function renderDashChart(){
+  const ctx = document.getElementById('dashChart');
+  const labels = [];
+  const data = [];
+  for(let i=6;i>=0;i--){
+    const d = new Date(); d.setDate(d.getDate()-i);
+    labels.push(d.toLocaleDateString('th-TH',{day:'numeric',month:'short'}));
+    data.push(Math.round(3000 + Math.random()*9000));
+  }
+  if(dashChartInstance) dashChartInstance.destroy();
+  dashChartInstance = new Chart(ctx, {
+    type:'bar',
+    data:{ labels, datasets:[{ label:'รายได้ (บาท)', data, backgroundColor:'#c9a35f', borderRadius:6 }] },
+    options:{ plugins:{legend:{display:false}}, scales:{ y:{ beginAtZero:true } } }
+  });
+}
+
+function renderRevenueChart(range){
+  const ctx = document.getElementById('revenueChart');
+  let labels, data;
+  if(range==='daily'){
+    labels = Array.from({length:14},(_,i)=>'วันที่ '+(i+1));
+    data = labels.map(()=>Math.round(2000+Math.random()*8000));
+  } else if(range==='monthly'){
+    labels = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+    data = labels.map(()=>Math.round(60000+Math.random()*150000));
+  } else {
+    labels = ['2565','2566','2567','2568','2569'];
+    data = labels.map(()=>Math.round(900000+Math.random()*1800000));
+  }
+  if(revenueChartInstance) revenueChartInstance.destroy();
+  revenueChartInstance = new Chart(ctx, {
+    type:'line',
+    data:{ labels, datasets:[{ label:'รายได้ (บาท)', data, borderColor:'#0d2c54', backgroundColor:'rgba(13,44,84,.12)', fill:true, tension:.35 }] },
+    options:{ plugins:{legend:{display:false}}, scales:{ y:{ beginAtZero:true } } }
+  });
+}
+
+document.getElementById('revenueRangeGroup').addEventListener('click', (e)=>{
+  const btn = e.target.closest('button'); if(!btn) return;
+  document.querySelectorAll('#revenueRangeGroup button').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  renderRevenueChart(btn.dataset.range);
+});
+
+/* ================================================================
+   ADMIN: จัดการห้องพัก
+================================================================ */
+function renderAdminRooms(){
   const tbody = document.getElementById('roomsAdminTable');
-  tbody.innerHTML = rooms.map(r => `
+  tbody.innerHTML = rooms.map((r,i)=>`
     <tr>
       <td><img src="${r.image}" class="thumb-sm"></td>
-      <td><strong>${r.name}</strong></td>
-      <td>${r.price} บาท</td>
-      <td>${r.tempPrice} บาท</td>
-      <td><span class="badge-status status-${r.status}">${r.status}</span></td>
+      <td>${r.name}</td>
+      <td><input type="number" class="form-control form-control-sm" style="width:100px" value="${r.price}" onchange="updateRoomField(${i},'price',this.value)"></td>
+      <td><input type="number" class="form-control form-control-sm" style="width:100px" value="${r.tempPrice}" onchange="updateRoomField(${i},'tempPrice',this.value)"></td>
       <td>
-        <button class="btn btn-sm btn-outline-secondary" onclick="toggleStatus('room', '${r.id}')"><i class="fa-solid fa-arrows-rotate"></i> สลับสถานะ</button>
+        <select class="form-select form-select-sm" style="width:150px" onchange="updateRoomField(${i},'status',this.value)">
+          ${['ว่าง','ไม่ว่าง','กำลังทำความสะอาด'].map(s=>`<option ${s===r.status?'selected':''}>${s}</option>`).join('')}
+        </select>
       </td>
-    </tr>
-  `).join('');
+      <td>
+        <button class="btn btn-sm btn-outline-secondary me-1" onclick="uploadRoomImage(${i})" title="อัปโหลดรูป"><i class="fa-solid fa-image"></i></button>
+        <button class="btn btn-sm btn-outline-danger" onclick="deleteRoom(${i})" title="ลบ"><i class="fa-solid fa-trash"></i></button>
+      </td>
+    </tr>`).join('');
 }
+function updateRoomField(i, field, value){
+  rooms[i][field] = (field==='price'||field==='tempPrice') ? Number(value) : value;
+  showToast('อัปเดตข้อมูลห้อง ' + rooms[i].name + ' สำเร็จ');
+  renderRooms();
+  refreshDashboardStats();
+}
+function uploadRoomImage(i){
+  const input = document.createElement('input');
+  input.type='file'; input.accept='image/*';
+  input.onchange = ()=>{
+    const file = input.files[0]; if(!file) return;
+    const reader = new FileReader();
+    reader.onload = (e)=>{
+      rooms[i].image = e.target.result;
+      renderAdminRooms(); renderRooms();
+      showToast('อัปโหลดรูปภาพสำเร็จ');
+    };
+    reader.readAsDataURL(file);
+  };
+  input.click();
+}
+function deleteRoom(i){
+  if(!confirm('ยืนยันการลบ '+rooms[i].name+' ?')) return;
+  rooms.splice(i,1);
+  renderAdminRooms(); renderRooms(); refreshDashboardStats();
+  showToast('ลบห้องพักเรียบร้อยแล้ว');
+}
+document.getElementById('btnAddRoom').addEventListener('click', ()=>{
+  const nextNum = rooms.length ? Math.max(...rooms.map(r=>parseInt(r.name.replace(/\D/g,''))||100)) + 1 : 101;
+  rooms.push({ id:'R'+nextNum, name:'ห้องพัก '+nextNum, image:ROOM_IMAGES[rooms.length % ROOM_IMAGES.length], price:550, tempPrice:220, status:'ว่าง' });
+  renderAdminRooms(); renderRooms(); refreshDashboardStats();
+  showToast('เพิ่มห้องพักใหม่สำเร็จ');
+});
 
-function renderAdminHouses() {
+/* ================================================================
+   ADMIN: จัดการบ้านพัก
+================================================================ */
+function renderAdminHouses(){
   const tbody = document.getElementById('housesAdminTable');
-  tbody.innerHTML = houses.map(h => `
+  tbody.innerHTML = houses.map((h,i)=>`
     <tr>
       <td><img src="${h.image}" class="thumb-sm"></td>
-      <td><strong>${h.name}</strong></td>
-      <td>${h.price} บาท</td>
-      <td>${h.maxGuests} ท่าน</td>
-      <td><span class="badge-status status-${h.status}">${h.status}</span></td>
+      <td>${h.name}</td>
+      <td><input type="number" class="form-control form-control-sm" style="width:100px" value="${h.price}" onchange="updateHouseField(${i},'price',this.value)"></td>
+      <td><input type="number" class="form-control form-control-sm" style="width:90px" value="${h.capacity}" onchange="updateHouseField(${i},'capacity',this.value)"></td>
       <td>
-        <button class="btn btn-sm btn-outline-secondary" onclick="toggleStatus('house', '${h.id}')"><i class="fa-solid fa-arrows-rotate"></i> สลับสถานะ</button>
+        <select class="form-select form-select-sm" style="width:150px" onchange="updateHouseField(${i},'status',this.value)">
+          ${['ว่าง','ไม่ว่าง','กำลังทำความสะอาด'].map(s=>`<option ${s===h.status?'selected':''}>${s}</option>`).join('')}
+        </select>
       </td>
-    </tr>
-  `).join('');
+      <td>
+        <button class="btn btn-sm btn-outline-secondary me-1" onclick="uploadHouseImage(${i})" title="อัปโหลดรูป"><i class="fa-solid fa-image"></i></button>
+        <button class="btn btn-sm btn-outline-danger" onclick="deleteHouse(${i})" title="ลบ"><i class="fa-solid fa-trash"></i></button>
+      </td>
+    </tr>`).join('');
 }
-
-function toggleStatus(type, id) {
-  if (type === 'room') {
-    const r = rooms.find(i => i.id === id);
-    if (r) r.status = r.status === 'ว่าง' ? 'ไม่ว่าง' : 'ว่าง';
-    renderRooms();
-    renderAdminRooms();
-  } else {
-    const h = houses.find(i => i.id === id);
-    if (h) h.status = h.status === 'ว่าง' ? 'ไม่ว่าง' : 'ว่าง';
-    renderHouses();
-    renderAdminHouses();
-  }
-  updateDashboardStats();
+function updateHouseField(i, field, value){
+  houses[i][field] = (field==='price'||field==='capacity') ? Number(value) : value;
+  showToast('อัปเดตข้อมูล ' + houses[i].name + ' สำเร็จ');
+  renderHouses(); refreshDashboardStats();
 }
+function uploadHouseImage(i){
+  const input = document.createElement('input');
+  input.type='file'; input.accept='image/*';
+  input.onchange = ()=>{
+    const file = input.files[0]; if(!file) return;
+    const reader = new FileReader();
+    reader.onload = (e)=>{
+      houses[i].image = e.target.result;
+      renderAdminHouses(); renderHouses();
+      showToast('อัปโหลดรูปภาพสำเร็จ');
+    };
+    reader.readAsDataURL(file);
+  };
+  input.click();
+}
+function deleteHouse(i){
+  if(!confirm('ยืนยันการลบ '+houses[i].name+' ?')) return;
+  houses.splice(i,1);
+  renderAdminHouses(); renderHouses();
+  showToast('ลบบ้านพักเรียบร้อยแล้ว');
+}
+document.getElementById('btnAddHouse').addEventListener('click', ()=>{
+  const n = houses.length+1;
+  houses.push({ id:'H'+Date.now(), name:'บ้านพัก หลังที่ '+n, image:HOUSE_IMAGES[(houses.length)%HOUSE_IMAGES.length], price:650, capacity:4, amenities:['แอร์','WiFi'], status:'ว่าง' });
+  renderAdminHouses(); renderHouses();
+  showToast('เพิ่มบ้านพักใหม่สำเร็จ');
+});
 
-function renderAdminBookings() {
+/* ================================================================
+   ADMIN: รายการจอง
+================================================================ */
+function renderAdminBookings(){
   const tbody = document.getElementById('bookingsAdminTable');
-  if (bookings.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted">ยังไม่มีข้อมูลการจอง</td></tr>';
-    return;
-  }
-  tbody.innerHTML = bookings.map(b => `
+  tbody.innerHTML = bookings.map((b,i)=>`
     <tr>
-      <td><strong>${b.code}</strong></td>
+      <td>${b.code}</td>
       <td>${b.name}</td>
       <td>${b.phone}</td>
-      <td>${b.item}</td>
+      <td>${b.type}</td>
       <td>${b.checkIn}</td>
       <td>${b.checkOut}</td>
-      <td><span class="badge bg-success">${b.status}</span></td>
-    </tr>
-  `).join('');
+      <td>
+        <select class="form-select form-select-sm" style="width:140px" onchange="updateBookingStatus(${i}, this.value)">
+          ${['รอดำเนินการ','ยืนยัน','เข้าพัก','Checkout','ยกเลิก'].map(s=>`<option ${s===b.status?'selected':''}>${s}</option>`).join('')}
+        </select>
+      </td>
+    </tr>`).join('');
+}
+function updateBookingStatus(i, status){
+  bookings[i].status = status;
+  renderAdminBookings(); refreshDashboardStats();
+  showToast('อัปเดตสถานะการจอง ' + bookings[i].code + ' เป็น "' + status + '"');
 }
 
-function renderAdminCustomers() {
+/* ================================================================
+   ADMIN: ลูกค้า
+================================================================ */
+function renderAdminCustomers(){
+  const map = {};
+  bookings.forEach(b=>{
+    if(!map[b.phone]) map[b.phone] = { name:b.name, phone:b.phone, count:0 };
+    map[b.phone].count++;
+  });
   const tbody = document.getElementById('customersAdminTable');
-  if (customers.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="3" class="text-center text-muted">ยังไม่มีข้อมูลลูกค้า</td></tr>';
-    return;
-  }
-  tbody.innerHTML = customers.map(c => `
-    <tr>
-      <td><strong>${c.name}</strong></td>
-      <td>${c.phone}</td>
-      <td>${c.count} ครั้ง</td>
-    </tr>
+  tbody.innerHTML = Object.values(map).map(c=>`
+    <tr><td>${c.name}</td><td>${c.phone}</td><td>${c.count}</td></tr>
   `).join('');
 }
 
-function renderAdminPromos() {
-  const container = document.getElementById('promoAdminList');
-  container.innerHTML = promotions.map(p => `
-    <div class="col-md-6">
-      <div class="border rounded-3 p-3 bg-light">
-        <div class="fw-bold">${p.title} (${p.discount})</div>
-        <div class="small text-muted mb-2">${p.detail}</div>
-        <span class="badge bg-navy-soft" style="background:var(--navy-900);">${p.code}</span>
+/* ================================================================
+   ADMIN: โปรโมชั่น
+================================================================ */
+function renderAdminPromotions(){
+  const c = document.getElementById('promoAdminList');
+  c.innerHTML = promotions.map((p,i)=>`
+    <div class="col-md-4">
+      <div class="border rounded-3 p-3 h-100">
+        <div class="d-flex justify-content-between mb-2">
+          <span class="badge" style="background:var(--gold-100);color:var(--navy-900);">${p.tag||'ทั่วไป'}</span>
+          <button class="btn btn-sm btn-outline-danger" onclick="deletePromo(${i})"><i class="fa-solid fa-trash"></i></button>
+        </div>
+        <div class="fw-semibold mb-1">${p.title}</div>
+        <div class="small text-muted">${p.desc}</div>
       </div>
-    </div>
-  `).join('');
+    </div>`).join('');
 }
+function deletePromo(i){
+  promotions.splice(i,1);
+  renderAdminPromotions(); renderPromotions();
+  showToast('ลบโปรโมชั่นเรียบร้อยแล้ว');
+}
+document.getElementById('btnAddPromo').addEventListener('click', ()=>{
+  const title = prompt('ชื่อโปรโมชั่น:'); if(!title) return;
+  const desc = prompt('รายละเอียด:') || '';
+  promotions.push({id:Date.now(), title, desc, tag:'ใหม่'});
+  renderAdminPromotions(); renderPromotions();
+  showToast('เพิ่มโปรโมชั่นใหม่สำเร็จ');
+});
 
 /* ================================================================
-   CHARTS (CHART.JS)
+   ADMIN: ตั้งค่าเว็บไซต์
 ================================================================ */
-function renderDashChart() {
-  const ctx = document.getElementById('dashChart');
-  if (!ctx) return;
-  if (dashChartInstance) dashChartInstance.destroy();
-
-  dashChartInstance = new Chart(ctx, {
-    type: 'line',
-    data: {
-      labels: ['จ.', 'อ.', 'พ.', 'พฤ.', 'ศ.', 'ส.', 'อา.'],
-      datasets: [{
-        label: 'รายได้ (บาท)',
-        data: [12000, 15000, 8000, 18000, 24000, 32000, 28000],
-        borderColor: '#c9a35f',
-        backgroundColor: 'rgba(201,163,95,0.1)',
-        fill: true,
-        tension: 0.3
-      }]
-    },
-    options: {
-      responsive: true,
-      plugins: { legend: { display: false } }
-    }
-  });
+let siteSettings = {
+  hotelName:'โรงแรมแฮปปี้ไนท์',
+  phone:'02-123-4567, 081-234-5678',
+  email:'info@happynight-hotel.com',
+  facebook:'',
+  map:''
+};
+function loadSettingsForm(){
+  document.getElementById('setHotelName').value = siteSettings.hotelName;
+  document.getElementById('setPhone').value = siteSettings.phone;
+  document.getElementById('setEmail').value = siteSettings.email;
+  document.getElementById('setFacebook').value = siteSettings.facebook;
+  document.getElementById('setMap').value = siteSettings.map;
 }
+document.getElementById('settingsForm').addEventListener('submit', function(e){
+  e.preventDefault();
+  siteSettings.hotelName = document.getElementById('setHotelName').value.trim() || siteSettings.hotelName;
+  siteSettings.phone = document.getElementById('setPhone').value.trim();
+  siteSettings.email = document.getElementById('setEmail').value.trim();
+  siteSettings.facebook = document.getElementById('setFacebook').value.trim();
+  siteSettings.map = document.getElementById('setMap').value.trim();
 
-function renderRevenueChart(range) {
-  const ctx = document.getElementById('revenueChart');
-  if (!ctx) return;
-  if (revenueChartInstance) revenueChartInstance.destroy();
+  // อัปเดตค่าบนหน้าเว็บไซต์ทันที (Live Update)
+  document.getElementById('hotelNameNav').textContent = siteSettings.hotelName;
+  document.getElementById('hotelNameHero').textContent = siteSettings.hotelName.replace('โรงแรม','').trim();
+  document.getElementById('hotelNameFooter').textContent = siteSettings.hotelName;
+  document.getElementById('hotelNameCopy').textContent = siteSettings.hotelName;
+  document.getElementById('hotelPhone').textContent = siteSettings.phone;
+  document.getElementById('hotelEmail').textContent = siteSettings.email;
 
-  let labels = [];
-  let data = [];
-
-  if (range === 'daily') {
-    labels = ['1 ก.ค.', '2 ก.ค.', '3 ก.ค.', '4 ก.ค.', '5 ก.ค.', '6 ก.ค.', '7 ก.ค.'];
-    data = [5000, 7500, 6200, 8900, 12000, 15500, 14000];
-  } else if (range === 'monthly') {
-    labels = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.'];
-    data = [120000, 140000, 110000, 180000, 160000, 150000, 190000];
-  } else {
-    labels = ['2023', '2024', '2025', '2026'];
-    data = [1200000, 1500000, 1800000, 2100000];
+  // โลโก้
+  const logoFile = document.getElementById('setLogo').files[0];
+  if(logoFile){
+    const reader = new FileReader();
+    reader.onload = (e)=>{
+      document.querySelectorAll('.brand-icon').forEach(b=>{
+        b.innerHTML = `<img src="${e.target.result}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`;
+      });
+    };
+    reader.readAsDataURL(logoFile);
+  }
+  // แบนเนอร์
+  const bannerFile = document.getElementById('setBanner').files[0];
+  if(bannerFile){
+    const reader = new FileReader();
+    reader.onload = (e)=>{
+      document.querySelector('.hero').style.backgroundImage =
+        `linear-gradient(180deg, rgba(8,27,52,.55) 0%, rgba(8,27,52,.75) 55%, var(--cream) 100%), url('${e.target.result}')`;
+    };
+    reader.readAsDataURL(bannerFile);
   }
 
-  revenueChartInstance = new Chart(ctx, {
-    type: 'bar',
-    data: {
-      labels: labels,
-      datasets: [{
-        label: 'ยอดขาย',
-        data: data,
-        backgroundColor: '#0d2c54'
-      }]
-    },
-    options: {
-      responsive: true,
-      plugins: { legend: { display: false } }
-    }
-  });
-}
+  showToast('บันทึกการตั้งค่าเว็บไซต์สำเร็จ');
+});
 
 /* ================================================================
-   SETTINGS & CHANGE PASSWORD
+   INIT (โหลดครั้งแรก)
 ================================================================ */
-function handleSettingsSubmit(e) {
-  e.preventDefault();
-  const name = document.getElementById('setHotelName').value;
-  const phone = document.getElementById('setPhone').value;
-  const email = document.getElementById('setEmail').value;
-
-  if (name) {
-    document.getElementById('hotelNameNav').textContent = name;
-    document.getElementById('hotelNameHero').textContent = name;
-    document.getElementById('hotelNameFooter').textContent = name;
-    document.getElementById('hotelNameCopy').textContent = name;
-  }
-  if (phone) document.getElementById('hotelPhone').textContent = phone;
-  if (email) document.getElementById('hotelEmail').textContent = email;
-
-  showToast('บันทึกการตั้งค่าเรียบร้อยแล้ว');
-}
-
-function handleChangePassword(e) {
-  e.preventDefault();
-  const u = document.getElementById('pwUsername').value;
-  const cur = document.getElementById('pwCurrent').value;
-  const n = document.getElementById('pwNew').value;
-  const c = document.getElementById('pwConfirm').value;
-
-  const err = document.getElementById('pwError');
-  const succ = document.getElementById('pwSuccess');
-
-  err.classList.add('d-none');
-  succ.classList.add('d-none');
-
-  if (u !== adminAccount.username || cur !== adminAccount.password) {
-    err.textContent = 'Username หรือ รหัสผ่านปัจจุบันไม่ถูกต้อง';
-    err.classList.remove('d-none');
-    return;
-  }
-
-  if (n !== c) {
-    err.textContent = 'รหัสผ่านใหม่และการยืนยันรหัสผ่านไม่ตรงกัน';
-    err.classList.remove('d-none');
-    return;
-  }
-
-  adminAccount.password = n;
-  succ.textContent = 'เปลี่ยนรหัสผ่านสำเร็จ!';
-  succ.classList.remove('d-none');
-  document.getElementById('changePasswordForm').reset();
-}
-
-function showToast(msg) {
-  document.getElementById('toastMsg').textContent = msg;
-  const toastEl = document.getElementById('mainToast');
-  const toast = new bootstrap.Toast(toastEl);
-  toast.show();
-}
+renderGallery();
+renderServices();
+renderRooms();
+renderHouses();
+renderPromotions();
 </script>
 </body>
 </html>
