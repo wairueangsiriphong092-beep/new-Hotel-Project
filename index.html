@@ -1781,6 +1781,7 @@ document.getElementById('adminLoginForm').addEventListener('submit', function(e)
     document.getElementById('adminLoginError').classList.add('d-none');
     document.getElementById('adminLoginScreen').classList.add('d-none');
     document.getElementById('adminDashboard').classList.remove('d-none');
+    sessionStorage.setItem('hn_admin_logged_in', '1'); // จำสถานะล็อกอินไว้ ไม่ให้หายเมื่อกด F5
     initAdminUI();
   } else {
     document.getElementById('adminLoginError').classList.remove('d-none');
@@ -1791,6 +1792,7 @@ document.getElementById('btnAdminLogout').addEventListener('click', ()=>{
   document.getElementById('adminDashboard').classList.add('d-none');
   document.getElementById('adminLoginScreen').classList.remove('d-none');
   document.getElementById('adminLoginForm').reset();
+  sessionStorage.removeItem('hn_admin_logged_in'); // ออกจากระบบ -> ล้างสถานะล็อกอินที่จำไว้
   stopAdminRealtimeRefresh();
 });
 
@@ -1880,6 +1882,16 @@ function initAdminUI(){
   renderRevenueChart('daily');
   loadBookingsFromSheet(); // โหลดรายการจองจริงจาก Google Sheet มาแทนที่ข้อมูล demo
   startAdminRealtimeRefresh(); // เริ่มดึงข้อมูลใหม่แบบเรียลไทม์ทุก 15 วินาทีระหว่างเปิดหน้า Admin
+}
+
+/* กด F5 แล้วยังอยู่หน้า Admin Dashboard เดิม + โหลดข้อมูลจาก Google Sheet ใหม่อัตโนมัติ
+   (ถ้าเคย login ไว้แล้วในเซสชันนี้ - ใช้ sessionStorage เก็บสถานะ) */
+if (sessionStorage.getItem('hn_admin_logged_in') === '1') {
+  document.getElementById('site-app').classList.add('d-none');
+  document.getElementById('admin-app').classList.remove('d-none');
+  document.getElementById('adminLoginScreen').classList.add('d-none');
+  document.getElementById('adminDashboard').classList.remove('d-none');
+  initAdminUI();
 }
 
 function refreshAdminData(){
