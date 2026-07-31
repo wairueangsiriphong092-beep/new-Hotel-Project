@@ -1006,5 +1006,106 @@
 
         window.addEventListener('beforeunload', stopDashboardPolling);
     </script>
+
+
+    <!-- UI extension: hides dashboard location search and adds logout without changing existing code -->
+    <style>
+        #searchInput {
+            display: none !important;
+        }
+
+        #dashboardView .grid.grid-cols-1.md\:grid-cols-3 {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        #logoutButton {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: .5rem;
+            min-height: 42px;
+            padding: .7rem 1rem;
+            border-radius: .9rem;
+            border: 1px solid #fecaca;
+            background: linear-gradient(135deg, #fff1f2, #fee2e2);
+            color: #be123c;
+            font-weight: 600;
+            box-shadow: 0 8px 20px rgba(225, 29, 72, .10);
+            transition: transform .2s ease, box-shadow .2s ease, background .2s ease;
+        }
+
+        #logoutButton:hover {
+            transform: translateY(-2px);
+            background: linear-gradient(135deg, #ffe4e6, #fecdd3);
+            box-shadow: 0 12px 26px rgba(225, 29, 72, .16);
+        }
+
+        #logoutButton:active {
+            transform: scale(.97);
+        }
+
+        #appHeaderActions {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: .65rem;
+            flex-wrap: wrap;
+        }
+
+        @media (max-width: 768px) {
+            #dashboardView .grid.grid-cols-1.md\:grid-cols-3 {
+                grid-template-columns: 1fr;
+            }
+
+            #appHeaderActions {
+                width: 100%;
+                justify-content: stretch;
+            }
+
+            #appHeaderActions > button {
+                flex: 1;
+            }
+        }
+    </style>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const appHeader = document.querySelector('#appView > div:first-child');
+            const dashboardButton = appHeader?.querySelector('button[onclick="toggleDashboard()"]');
+
+            if (appHeader && dashboardButton && !document.getElementById('logoutButton')) {
+                const actionGroup = document.createElement('div');
+                actionGroup.id = 'appHeaderActions';
+
+                dashboardButton.parentNode.insertBefore(actionGroup, dashboardButton);
+                actionGroup.appendChild(dashboardButton);
+
+                const logoutButton = document.createElement('button');
+                logoutButton.id = 'logoutButton';
+                logoutButton.type = 'button';
+                logoutButton.innerHTML = '<span aria-hidden="true">↪</span><span>ออกจากระบบ</span>';
+                logoutButton.addEventListener('click', logoutAdmin);
+                actionGroup.appendChild(logoutButton);
+            }
+        });
+
+        function logoutAdmin() {
+            stopDashboardPolling();
+            currentAdmin = '';
+            currentPassword = '';
+            logs = [];
+
+            document.getElementById('appView').classList.add('hidden');
+            document.getElementById('dashboardView').classList.add('hidden');
+            document.getElementById('loginView').classList.remove('hidden');
+
+            document.getElementById('username').value = '';
+            document.getElementById('password').value = '';
+            document.getElementById('loginError').classList.add('hidden');
+            document.getElementById('currentUserLabel').textContent = '';
+            document.getElementById('username').focus();
+        }
+    </script>
+
 </body>
 </html>
