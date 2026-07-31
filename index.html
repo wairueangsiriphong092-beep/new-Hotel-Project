@@ -1385,14 +1385,9 @@ let promotions = [
   {id:3, title:'อาหารเช้าฟรี', desc:'เมื่อจองห้องพักผ่านหน้าเว็บไซต์นี้ รับอาหารเช้าฟรีทันที', tag:''}
 ];
 
-// รายการจอง (demo seed + จองจริงจากผู้ใช้จะถูกเพิ่มเข้ามา)
-let bookingCounter = 1005;
-let bookings = [
-  {code:'BK1001', name:'สมชาย ใจดี', phone:'0812345678', email:'somchai@mail.com', type:'ห้องพัก 101', checkIn:'2026-08-01', checkOut:'2026-08-03', guests:2, total:1100, status:'ยืนยัน'},
-  {code:'BK1002', name:'วิภา สุขใส', phone:'0898765432', email:'wipa@mail.com', type:'บ้านพัก หลังที่ 1', checkIn:'2026-08-05', checkOut:'2026-08-07', guests:4, total:2000, status:'รอดำเนินการ'},
-  {code:'BK1003', name:'อนุชา พงษ์พันธ์', phone:'0855551234', email:'anucha@mail.com', type:'ห้องพัก 105', checkIn:'2026-07-20', checkOut:'2026-07-21', guests:1, total:550, status:'Checkout'},
-  {code:'BK1004', name:'กมลชนก แสงทอง', phone:'0867778899', email:'kamon@mail.com', type:'ห้องพัก 110', checkIn:'2026-08-10', checkOut:'2026-08-10', guests:1, total:250, status:'ยกเลิก'}
-];
+// รายการจอง (จะถูกโหลดจาก Google Sheet จริงผ่าน loadBookingsFromSheet() เมื่อเข้าหน้า Admin)
+let bookingCounter = 1000;
+let bookings = [];
 
 const STATUS_COLOR = {
   'รออนุมัติ':'#d99a2b','รอดำเนินการ':'#d99a2b','ยืนยัน':'#2f9e6b','เข้าพัก':'#14396b','Checkout':'#5b6472','ยกเลิก':'#d1495b'
@@ -1772,6 +1767,7 @@ function goToSite(){
   document.getElementById('admin-app').classList.add('d-none');
   document.getElementById('site-app').classList.remove('d-none');
   window.scrollTo(0,0);
+  stopAdminRealtimeRefresh();
 }
 
 // ข้อมูลบัญชีผู้ดูแลระบบ (เก็บในหน่วยความจำ - สามารถเปลี่ยนรหัสผ่านได้ในหน้าตั้งค่า)
@@ -1795,6 +1791,7 @@ document.getElementById('btnAdminLogout').addEventListener('click', ()=>{
   document.getElementById('adminDashboard').classList.add('d-none');
   document.getElementById('adminLoginScreen').classList.remove('d-none');
   document.getElementById('adminLoginForm').reset();
+  stopAdminRealtimeRefresh();
 });
 
 /* เปลี่ยนรหัสผ่าน Admin */
@@ -1853,6 +1850,22 @@ document.getElementById('btnToggleSidebar').addEventListener('click', ()=>{
    ADMIN: DASHBOARD STATS
 ================================================================ */
 let dashChartInstance, revenueChartInstance;
+let adminRefreshInterval = null; // ตัวจับเวลาสำหรับดึงข้อมูลจาก Google Sheet แบบเรียลไทม์
+
+function startAdminRealtimeRefresh(){
+  stopAdminRealtimeRefresh();
+  adminRefreshInterval = setInterval(()=>{
+    if(!document.getElementById('adminDashboard').classList.contains('d-none')){
+      loadBookingsFromSheet();
+    }
+  }, 15000); // ดึงข้อมูลใหม่ทุก 15 วินาที
+}
+function stopAdminRealtimeRefresh(){
+  if(adminRefreshInterval){
+    clearInterval(adminRefreshInterval);
+    adminRefreshInterval = null;
+  }
+}
 
 function initAdminUI(){
   renderAdminRooms();
@@ -1866,6 +1879,7 @@ function initAdminUI(){
   renderDashChart();
   renderRevenueChart('daily');
   loadBookingsFromSheet(); // โหลดรายการจองจริงจาก Google Sheet มาแทนที่ข้อมูล demo
+  startAdminRealtimeRefresh(); // เริ่มดึงข้อมูลใหม่แบบเรียลไทม์ทุก 15 วินาทีระหว่างเปิดหน้า Admin
 }
 
 function refreshAdminData(){
@@ -1904,8 +1918,12 @@ function renderDashChart(){
   const data = [];
   for(let i=6;i>=0;i--){
     const d = new Date(); d.setDate(d.getDate()-i);
+    const iso = d.toISOString().slice(0,10);
     labels.push(d.toLocaleDateString('th-TH',{day:'numeric',month:'short'}));
-    data.push(Math.round(3000 + Math.random()*9000));
+    const dayRevenue = bookings
+      .filter(b=>b.checkIn===iso && b.status!=='ยกเลิก')
+      .reduce((s,b)=>s+Number(b.total||0),0);
+    data.push(dayRevenue);
   }
   if(dashChartInstance) dashChartInstance.destroy();
   dashChartInstance = new Chart(ctx, {
@@ -1915,18 +1933,39 @@ function renderDashChart(){
   });
 }
 
+let currentRevenueRange = 'daily';
+
 function renderRevenueChart(range){
+  currentRevenueRange = range;
   const ctx = document.getElementById('revenueChart');
   let labels, data;
+  const validBookings = bookings.filter(b=>b.status!=='ยกเลิก');
+
   if(range==='daily'){
-    labels = Array.from({length:14},(_,i)=>'วันที่ '+(i+1));
-    data = labels.map(()=>Math.round(2000+Math.random()*8000));
+    labels = []; data = [];
+    for(let i=13;i>=0;i--){
+      const d = new Date(); d.setDate(d.getDate()-i);
+      const iso = d.toISOString().slice(0,10);
+      labels.push(d.toLocaleDateString('th-TH',{day:'numeric',month:'short'}));
+      data.push(validBookings.filter(b=>b.checkIn===iso).reduce((s,b)=>s+Number(b.total||0),0));
+    }
   } else if(range==='monthly'){
     labels = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
-    data = labels.map(()=>Math.round(60000+Math.random()*150000));
+    const thisYear = String(new Date().getFullYear());
+    data = labels.map((_,idx)=>{
+      const mm = String(idx+1).padStart(2,'0');
+      return validBookings
+        .filter(b=> (b.checkIn||'').slice(0,4)===thisYear && (b.checkIn||'').slice(5,7)===mm)
+        .reduce((s,b)=>s+Number(b.total||0),0);
+    });
   } else {
-    labels = ['2565','2566','2567','2568','2569'];
-    data = labels.map(()=>Math.round(900000+Math.random()*1800000));
+    const thisYear = new Date().getFullYear();
+    labels = Array.from({length:5},(_,i)=> String(thisYear-4+i));
+    data = labels.map(y=>
+      validBookings
+        .filter(b=> (b.checkIn||'').slice(0,4)===y)
+        .reduce((s,b)=>s+Number(b.total||0),0)
+    );
   }
   if(revenueChartInstance) revenueChartInstance.destroy();
   revenueChartInstance = new Chart(ctx, {
@@ -2108,6 +2147,8 @@ function loadBookingsFromSheet(){
       renderAdminBookings();
       renderAdminCustomers();
       refreshDashboardStats();
+      renderDashChart();
+      renderRevenueChart(currentRevenueRange);
     } else if(res && res.result === 'error'){
       showToast('โหลดรายการจองจาก Google Sheet ไม่สำเร็จ: ' + res.message, 'error');
     }
