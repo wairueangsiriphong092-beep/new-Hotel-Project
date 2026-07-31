@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ระบบตรวจเช็คความสะอาด</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .hidden-view { display: none; }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen p-4">
+
+    <!-- Login View -->
+    <div id="loginView" class="max-w-md mx-auto bg-white p-6 rounded-xl shadow-lg mt-10">
+        <h1 class="text-2xl font-bold mb-6 text-center text-gray-800">เข้าสู่ระบบ</h1>
+        <input type="text" id="username" placeholder="Username (admin1, admin2, admin3)" class="w-full p-3 border rounded-lg mb-3">
+        <input type="password" id="password" placeholder="Password (pass1, pass2, pass3)" class="w-full p-3 border rounded-lg mb-4">
+        <button onclick="handleLogin()" class="w-full bg-blue-600 text-white py-3 rounded-lg font-bold hover:bg-blue-700">เข้าสู่ระบบ</button>
+        <p id="loginError" class="text-red-500 text-center mt-3 hidden">ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง</p>
+    </div>
+
+    <!-- Main Application View -->
+    <div id="mainView" class="max-w-2xl mx-auto bg-white p-6 rounded-xl shadow-lg mt-10 hidden-view">
+        
+        <!-- Navigation -->
+        <div class="flex justify-between items-center mb-6 border-b pb-4">
+            <h2 class="text-xl font-bold text-gray-800">ระบบเช็คความสะอาด</h2>
+            <div class="text-sm">
+                <span class="text-gray-600">ผู้ใช้งาน: </span>
+                <span id="displayAdminName" class="font-bold text-blue-600"></span>
+                <button onclick="logout()" class="ml-4 text-red-500 underline text-xs">ออก</button>
+            </div>
+        </div>
+
+        <!-- Tabs -->
+        <div class="flex gap-4 mb-6">
+            <button onclick="switchView('formView')" class="px-4 py-2 bg-blue-100 text-blue-700 rounded-lg font-medium">ฟอร์มบันทึก</button>
+            <button onclick="switchView('dashboardView')" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg font-medium">Dashboard</button>
+        </div>
+
+        <!-- Form View -->
+        <div id="formView" class="space-y-4">
+            <div>
+                <label class="block text-sm font-medium mb-1">เลือกสถานที่</label>
+                <select id="locationSelect" class="w-full p-2 border rounded-lg"></select>
+            </div>
+            <div>
+                <label class="block text-sm font-medium mb-1">จุดที่ทำความสะอาด</label>
+                <div class="grid grid-cols-2 gap-2">
+                    <button type="button" onclick="toggleItem('เตียง')" class="item-btn p-2 border rounded-lg">เตียง</button>
+                    <button type="button" onclick="toggleItem('ห้องน้ำ')" class="item-btn p-2 border rounded-lg">ห้องน้ำ</button>
+                    <button type="button" onclick="toggleItem('ฝักบัว')" class="item-btn p-2 border rounded-lg">ฝักบัว</button>
+                    <button type="button" onclick="toggleItem('แอร์')" class="item-btn p-2 border rounded-lg">แอร์</button>
+                    <button type="button" onclick="toggleItem('ตรวจสอบแล้วทั้งหมด')" class="col-span-2 bg-green-50 text-green-700 border-green-200 p-2 border rounded-lg">ตรวจสอบแล้วทั้งหมด</button>
+                </div>
+            </div>
+            <div>
+                <label class="block text-sm font-medium mb-1">สถานะ</label>
+                <select id="statusSelect" class="w-full p-2 border rounded-lg">
+                    <option value="เรียบร้อย">เรียบร้อย</option>
+                    <option value="ไม่เรียบร้อย">ไม่เรียบร้อย</option>
+                </select>
+            </div>
+            <button onclick="submitRecord()" class="w-full bg-blue-600 text-white py-3 rounded-lg font-bold">บันทึกข้อมูล</button>
+        </div>
+
+        <!-- Dashboard View -->
+        <div id="dashboardView" class="hidden-view space-y-4">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
+                <input type="text" id="searchInput" oninput="renderDashboard()" placeholder="ค้นหาสถานที่..." class="p-2 border rounded-lg text-sm">
+                <input type="date" id="filterDate" onchange="renderDashboard()" class="p-2 border rounded-lg text-sm">
+            </div>
+            <select id="filterStatus" onchange="renderDashboard()" class="w-full p-2 border rounded-lg text-sm">
+                <option value="ทั้งหมด">สถานะทั้งหมด</option>
+                <option value="เรียบร้อย">เรียบร้อย</option>
+                <option value="ไม่เรียบร้อย">ไม่เรียบร้อย</option>
+            </select>
+            
+            <div class="overflow-x-auto border rounded-lg">
+                <table class="min-w-full text-xs">
+                    <thead class="bg-gray-50 border-b">
+                        <tr>
+                            <th class="p-2 text-left">เวลา</th>
+                            <th class="p-2 text-left">สถานที่</th>
+                            <th class="p-2 text-left">จุดตรวจ</th>
+                            <th class="p-2 text-left">สถานะ</th>
+                            <th class="p-2 text-left">ผู้ตรวจ</th>
+                        </tr>
+                    </thead>
+                    <tbody id="dashboardTableBody"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const ADMINS = { "admin1": "pass1", "admin2": "pass2", "admin3": "pass3" };
+        let currentAdmin = "";
+        let selectedItems = new Set();
+        let logs = []; // In-memory storage for demonstration
+
+        // Populate locations
+        const select = document.getElementById('locationSelect');
+        for(let i=1; i<=24; i++) select.innerHTML += `<option value="ห้อง ${i}">ห้อง ${i}</option>`;
+        for(let i=1; i<=3; i++) select.innerHTML += `<option value="บ้าน ${i}">บ้าน ${i}</option>`;
+
+        function handleLogin() {
+            const user = document.getElementById('username').value;
+            const pass = document.getElementById('password').value;
+            if (ADMINS[user] && ADMINS[user] === pass) {
+                currentAdmin = user;
+                document.getElementById('displayAdminName').textContent = user;
+                document.getElementById('loginView').classList.add('hidden-view');
+                document.getElementById('mainView').classList.remove('hidden-view');
+            } else {
+                document.getElementById('loginError').classList.remove('hidden');
+            }
+        }
+
+        function logout() {
+            location.reload();
+        }
+
+        function switchView(viewId) {
+            document.getElementById('formView').classList.add('hidden-view');
+            document.getElementById('dashboardView').classList.add('hidden-view');
+            document.getElementById(viewId).classList.remove('hidden-view');
+            if(viewId === 'dashboardView') renderDashboard();
+        }
+
+        function toggleItem(item) {
+            if(item === 'ตรวจสอบแล้วทั้งหมด') {
+                selectedItems = new Set(['เตียง', 'ห้องน้ำ', 'ฝักบัว', 'แอร์']);
+            } else {
+                if(selectedItems.has(item)) selectedItems.delete(item);
+                else selectedItems.add(item);
+            }
+            updateItemUI();
+        }
+
+        function updateItemUI() {
+            document.querySelectorAll('.item-btn').forEach(btn => {
+                btn.classList.toggle('bg-blue-500', selectedItems.has(btn.textContent));
+                btn.classList.toggle('text-white', selectedItems.has(btn.textContent));
+            });
+        }
+
+        function submitRecord() {
+            if(selectedItems.size === 0) { alert('กรุณาเลือกจุดที่ทำความสะอาด'); return; }
+            
+            const record = {
+                time: new Date().toLocaleString('th-TH'),
+                date: new Date().toISOString().split('T')[0],
+                location: document.getElementById('locationSelect').value,
+                items: Array.from(selectedItems).join(', '),
+                status: document.getElementById('statusSelect').value,
+                admin: currentAdmin
+            };
+            
+            logs.push(record);
+            alert('บันทึกข้อมูลเรียบร้อย');
+            selectedItems.clear();
+            updateItemUI();
+        }
+
+        function renderDashboard() {
+            const tbody = document.getElementById('dashboardTableBody');
+            const search = document.getElementById('searchInput').value.toLowerCase();
+            const dateFilter = document.getElementById('filterDate').value;
+            const statusFilter = document.getElementById('filterStatus').value;
+
+            const filtered = logs.filter(log => {
+                const matchSearch = log.location.toLowerCase().includes(search);
+                const matchDate = dateFilter ? log.date === dateFilter : true;
+                const matchStatus = statusFilter === 'ทั้งหมด' ? true : log.status === statusFilter;
+                return matchSearch && matchDate && matchStatus;
+            });
+
+            tbody.innerHTML = filtered.map(log => `
+                <tr class="border-b">
+                    <td class="p-2">${log.time.split(',')[1]}</td>
+                    <td class="p-2 font-medium">${log.location}</td>
+                    <td class="p-2 text-gray-600">${log.items}</td>
+                    <td class="p-2 font-bold ${log.status === 'เรียบร้อย' ? 'text-green-600' : 'text-red-600'}">${log.status}</td>
+                    <td class="p-2 text-gray-500">${log.admin}</td>
+                </tr>
+            `).join('');
+        }
+    </script>
+</body>
+</html>
