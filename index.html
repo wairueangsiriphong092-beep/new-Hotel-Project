@@ -1033,6 +1033,7 @@ html{ scroll-behavior:smooth; }
 
       <!-- PANEL: DASHBOARD -->
       <div class="admin-panel active" id="panel-dashboard">
+        <div id="gasStatusBanner" class="alert alert-danger d-none py-2 px-3 small mb-3"></div>
         <div class="row g-3 mb-4">
           <div class="col-md-3 col-6">
             <div class="admin-stat-card stat-1"><i class="fa-solid fa-bed"></i>
@@ -1301,7 +1302,17 @@ const GasConnector = (function () {
       return Promise.resolve({ result: 'error', message: 'https://script.google.com/macros/s/AKfycbzqR1bIgffpilYGUwHiQ3wk_v9Mtp5ExI8elVeyB6Rmz230-fZice-xnqf6BYeQjyjk/exec', bookings: [] });
     }
     return fetch(GAS_URL + '?action=list')
-      .then(res => res.json())
+      .then(res => {
+        const contentType = res.headers.get('content-type') || '';
+        if (!res.ok) {
+          throw new Error('เซิร์ฟเวอร์ตอบกลับ HTTP ' + res.status + ' (URL อาจ deploy ไม่ถูกต้อง)');
+        }
+        if (contentType.indexOf('application/json') === -1) {
+          // Apps Script มักส่ง HTML กลับมาแทน JSON เวลา deploy ผิดสิทธิ์ หรือ URL ไม่ใช่เวอร์ชันล่าสุด
+          throw new Error('ได้รับ HTML แทน JSON — ตรวจสอบว่า deploy เป็น "Anyone" และเป็นเวอร์ชันล่าสุดหรือยัง');
+        }
+        return res.json();
+      })
       .catch(err => {
         console.error('fetchBookings error:', err);
         return { result: 'error', message: err.message, bookings: [] };
@@ -2142,7 +2153,14 @@ function updateBookingStatus(i, status){
 
 /* โหลดรายการจองจริงจาก Google Sheet มาแทนที่ข้อมูล demo ในหน่วยความจำ */
 function loadBookingsFromSheet(){
-  if(!GasConnector.isConfigured()) return;
+  const banner = document.getElementById('gasStatusBanner');
+  if(!GasConnector.isConfigured()){
+    if(banner){
+      banner.textContent = 'ยังไม่ได้ตั้งค่า GAS_URL — ระบบทำงานแบบ demo เท่านั้น ข้อมูลจะไม่ถูกดึงจาก Google Sheet';
+      banner.classList.remove('d-none');
+    }
+    return;
+  }
   GasConnector.fetchBookings().then(res=>{
     if(res && res.result === 'success' && Array.isArray(res.bookings)){
       bookings = res.bookings.map(b=>({
@@ -2156,6 +2174,7 @@ function loadBookingsFromSheet(){
         total: Number(b.price) || 0,
         status: b.status || 'รออนุมัติ'
       }));
+      if(banner) banner.classList.add('d-none'); // สำเร็จ -> ซ่อน banner แจ้งเตือน
       renderAdminBookings();
       renderAdminCustomers();
       refreshDashboardStats();
@@ -2163,6 +2182,12 @@ function loadBookingsFromSheet(){
       renderRevenueChart(currentRevenueRange);
     } else if(res && res.result === 'error'){
       showToast('โหลดรายการจองจาก Google Sheet ไม่สำเร็จ: ' + res.message, 'error');
+      if(banner){
+        banner.innerHTML = '<i class="fa-solid fa-triangle-exclamation me-1"></i> เชื่อมต่อ Google Sheet ไม่สำเร็จ: '
+          + res.message
+          + ' — ตรวจสอบว่า Deploy เว็บแอปเป็นเวอร์ชันล่าสุด (Manage deployments &gt; New version) และตั้งค่า Who has access เป็น "Anyone"';
+        banner.classList.remove('d-none');
+      }
     }
   });
 }
