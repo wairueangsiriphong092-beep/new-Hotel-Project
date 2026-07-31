@@ -1402,5 +1402,334 @@
         })();
     </script>
 
+
+    <!-- Status extension: adds "แก้ไขเรียบร้อยแล้ว" and note without modifying existing code -->
+    <style>
+        #resolvedNoteContainer {
+            margin-top: .75rem;
+        }
+
+        #resolvedNoteInput {
+            width: 100%;
+            min-height: 56px;
+            padding: 1rem;
+            border: 2px solid #bbf7d0;
+            border-radius: 1rem;
+            background: rgba(255,255,255,.98);
+            outline: none;
+            box-shadow: 0 6px 18px rgba(22,163,74,.07);
+            transition: border-color .2s ease, box-shadow .2s ease, transform .2s ease;
+        }
+
+        #resolvedNoteInput:focus {
+            border-color: #22c55e;
+            box-shadow: 0 0 0 4px rgba(34,197,94,.13), 0 9px 22px rgba(15,23,42,.07);
+            transform: translateY(-1px);
+        }
+
+        .resolved-status-badge {
+            background: #dcfce7 !important;
+            color: #15803d !important;
+        }
+
+        .resolved-note-text {
+            margin-top: .3rem;
+            font-size: .75rem;
+            color: #15803d;
+        }
+    </style>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const statusSelect = document.getElementById('statusSelect');
+            const reasonContainer = document.getElementById('reasonContainer');
+
+            if (statusSelect && !statusSelect.querySelector('option[value="แก้ไขเรียบร้อยแล้ว"]')) {
+                const option = document.createElement('option');
+                option.value = 'แก้ไขเรียบร้อยแล้ว';
+                option.textContent = 'แก้ไขเรียบร้อยแล้ว ✅';
+                statusSelect.appendChild(option);
+            }
+
+            if (reasonContainer && !document.getElementById('resolvedNoteContainer')) {
+                const container = document.createElement('div');
+                container.id = 'resolvedNoteContainer';
+                container.className = 'hidden';
+
+                const input = document.createElement('input');
+                input.type = 'text';
+                input.id = 'resolvedNoteInput';
+                input.maxLength = 500;
+                input.placeholder = 'ระบุหมายเหตุการแก้ไข...';
+
+                container.appendChild(input);
+                reasonContainer.insertAdjacentElement('afterend', container);
+            }
+
+            if (statusSelect) {
+                statusSelect.addEventListener('change', updateResolvedStatusUI);
+            }
+
+            updateResolvedStatusUI();
+        });
+
+        function updateResolvedStatusUI() {
+            const statusSelect = document.getElementById('statusSelect');
+            const resolvedContainer = document.getElementById('resolvedNoteContainer');
+            const reasonContainer = document.getElementById('reasonContainer');
+
+            if (!statusSelect || !resolvedContainer) return;
+
+            const isResolved = statusSelect.value === 'แก้ไขเรียบร้อยแล้ว';
+            resolvedContainer.classList.toggle('hidden', !isResolved);
+
+            if (isResolved && reasonContainer) {
+                reasonContainer.classList.add('hidden');
+                const reasonInput = document.getElementById('reasonInput');
+                if (reasonInput) reasonInput.value = '';
+            }
+
+            if (!isResolved) {
+                const resolvedNoteInput = document.getElementById('resolvedNoteInput');
+                if (resolvedNoteInput) resolvedNoteInput.value = '';
+            }
+        }
+
+        const originalSubmitRecordForResolved = submitRecord;
+        submitRecord = async function () {
+            const statusSelect = document.getElementById('statusSelect');
+            const resolvedNoteInput = document.getElementById('resolvedNoteInput');
+
+            if (statusSelect?.value === 'แก้ไขเรียบร้อยแล้ว') {
+                const note = resolvedNoteInput?.value.trim() || '';
+
+                if (!note) {
+                    alert('โปรดระบุหมายเหตุการแก้ไข');
+                    return;
+                }
+
+                const reasonInput = document.getElementById('reasonInput');
+                if (reasonInput) reasonInput.value = note;
+            }
+
+            await originalSubmitRecordForResolved();
+
+            if (statusSelect?.value === 'แก้ไขเรียบร้อยแล้ว') {
+                const resolvedNote = document.getElementById('resolvedNoteInput');
+                if (resolvedNote) resolvedNote.value = '';
+            }
+        };
+
+        const originalResetFormForResolved = resetForm;
+        resetForm = function () {
+            originalResetFormForResolved();
+
+            const resolvedContainer = document.getElementById('resolvedNoteContainer');
+            const resolvedNoteInput = document.getElementById('resolvedNoteInput');
+
+            if (resolvedContainer) resolvedContainer.classList.add('hidden');
+            if (resolvedNoteInput) resolvedNoteInput.value = '';
+        };
+
+        const originalRenderDashboardForResolved = renderDashboard;
+        renderDashboard = function () {
+            originalRenderDashboardForResolved();
+
+            document.querySelectorAll('#dashboardTableBody tr').forEach((row) => {
+                const cells = row.querySelectorAll('td');
+                if (cells.length < 5) return;
+
+                const statusCell = cells[4];
+                const badge = statusCell.querySelector('span');
+                if (!badge) return;
+
+                const statusText = badge.textContent.trim();
+
+                if (statusText === 'แก้ไขเรียบร้อยแล้ว') {
+                    badge.classList.remove('bg-green-100', 'text-green-600', 'bg-red-100', 'text-red-600');
+                    badge.classList.add('resolved-status-badge');
+
+                    const reasonText = statusCell.querySelector('.text-xs');
+                    if (reasonText) {
+                        reasonText.classList.remove('text-red-500');
+                        reasonText.classList.add('resolved-note-text');
+                        reasonText.textContent = reasonText.textContent.replace(/^เหตุผล:/, 'หมายเหตุ:');
+                    }
+                }
+            });
+        };
+    </script>
+
+
+    <!-- Dashboard status filter extension: added without modifying existing code -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const filterStatus = document.getElementById('filterStatus');
+
+            if (filterStatus && !filterStatus.querySelector('option[value="แก้ไขเรียบร้อยแล้ว"]')) {
+                const resolvedOption = document.createElement('option');
+                resolvedOption.value = 'แก้ไขเรียบร้อยแล้ว';
+                resolvedOption.textContent = 'แก้ไขเรียบร้อยแล้ว';
+                filterStatus.appendChild(resolvedOption);
+            }
+        });
+    </script>
+
+
+    <!-- Resolved summary card extension: added without modifying existing code -->
+    <style>
+        #dashboardView .grid.grid-cols-1.sm\:grid-cols-3 {
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+        }
+
+        #resolvedCountCard {
+            position: relative;
+            overflow: hidden;
+            padding: 1.25rem;
+            border-radius: 1rem;
+            background: linear-gradient(135deg, #f0fdf4, #d1fae5);
+            border: 1px solid #a7f3d0;
+            box-shadow: 0 14px 32px rgba(5, 150, 105, .10);
+            transition: transform .22s ease, box-shadow .22s ease;
+        }
+
+        #resolvedCountCard:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 18px 38px rgba(5, 150, 105, .16);
+        }
+
+        #resolvedCountCard::after {
+            content: '';
+            position: absolute;
+            right: -20px;
+            top: -20px;
+            width: 90px;
+            height: 90px;
+            border-radius: 999px;
+            background: #10b981;
+            opacity: .09;
+        }
+
+        #resolvedCountLabel {
+            color: #059669;
+            font-size: .875rem;
+        }
+
+        #resolvedCount {
+            margin-top: .35rem;
+            color: #065f46;
+            font-size: 1.875rem;
+            line-height: 1;
+            font-weight: 700;
+            letter-spacing: -.04em;
+        }
+
+        @media (max-width: 900px) {
+            #dashboardView .grid.grid-cols-1.sm\:grid-cols-3 {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+        }
+
+        @media (max-width: 640px) {
+            #dashboardView .grid.grid-cols-1.sm\:grid-cols-3 {
+                grid-template-columns: 1fr;
+            }
+
+            #resolvedCountCard {
+                padding: 1rem;
+            }
+        }
+    </style>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const summaryGrid = document.querySelector(
+                '#dashboardView .grid.grid-cols-1.sm\\:grid-cols-3'
+            );
+
+            if (summaryGrid && !document.getElementById('resolvedCountCard')) {
+                const card = document.createElement('div');
+                card.id = 'resolvedCountCard';
+                card.innerHTML = `
+                    <p id="resolvedCountLabel">แก้ไขเรียบร้อยแล้ว</p>
+                    <p id="resolvedCount">0</p>
+                `;
+                summaryGrid.appendChild(card);
+            }
+
+            updateResolvedSummaryCount();
+        });
+
+        function normalizeDashboardDateValue(value) {
+            if (!value) return '';
+
+            const raw = String(value).trim();
+
+            const isoMatch = raw.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
+            if (isoMatch) {
+                let year = Number(isoMatch[1]);
+                if (year > 2400) year -= 543;
+                return `${String(year).padStart(4, '0')}-${String(isoMatch[2]).padStart(2, '0')}-${String(isoMatch[3]).padStart(2, '0')}`;
+            }
+
+            const slashMatch = raw.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+            if (slashMatch) {
+                let year = Number(slashMatch[3]);
+                if (year > 2400) year -= 543;
+                return `${String(year).padStart(4, '0')}-${String(slashMatch[2]).padStart(2, '0')}-${String(slashMatch[1]).padStart(2, '0')}`;
+            }
+
+            const parsed = new Date(raw);
+            if (!Number.isNaN(parsed.getTime())) {
+                const year = parsed.getFullYear();
+                const month = String(parsed.getMonth() + 1).padStart(2, '0');
+                const day = String(parsed.getDate()).padStart(2, '0');
+                return `${year}-${month}-${day}`;
+            }
+
+            return raw;
+        }
+
+        function getTodayLocalDateValue() {
+            const now = new Date();
+            const year = now.getFullYear();
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const day = String(now.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        }
+
+        function updateResolvedSummaryCount() {
+            const counter = document.getElementById('resolvedCount');
+            if (!counter || !Array.isArray(logs)) return;
+
+            const selectedDate =
+                document.getElementById('filterDate')?.value ||
+                getTodayLocalDateValue();
+
+            const normalizedSelectedDate = normalizeDashboardDateValue(selectedDate);
+
+            const count = logs.filter((record) => {
+                const recordDate = normalizeDashboardDateValue(record?.date);
+                return (
+                    recordDate === normalizedSelectedDate &&
+                    String(record?.status || '').trim() === 'แก้ไขเรียบร้อยแล้ว'
+                );
+            }).length;
+
+            counter.textContent = count;
+        }
+
+        const previousRenderDashboardForResolvedSummary = renderDashboard;
+        renderDashboard = function () {
+            previousRenderDashboardForResolvedSummary();
+            updateResolvedSummaryCount();
+        };
+
+        document.getElementById('filterDate')?.addEventListener(
+            'change',
+            updateResolvedSummaryCount
+        );
+    </script>
+
 </body>
 </html>
