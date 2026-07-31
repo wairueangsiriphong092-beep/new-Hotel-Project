@@ -1233,5 +1233,174 @@
         })();
     </script>
 
+
+    <!-- Dashboard daily summary counters: additive patch only -->
+    <script>
+        (function () {
+            function getTodayValueForSummary() {
+                const now = new Date();
+                const year = now.getFullYear();
+                const month = String(now.getMonth() + 1).padStart(2, '0');
+                const day = String(now.getDate()).padStart(2, '0');
+                return `${year}-${month}-${day}`;
+            }
+
+            function updateDailySummaryCounters() {
+                const dateInput = document.getElementById('filterDate');
+                const selectedDate = dateInput?.value || getTodayValueForSummary();
+                const sourceLogs = Array.isArray(window.logs) ? window.logs : [];
+                const dailyLogs = sourceLogs.filter((record) => String(record.date || '') === selectedDate);
+
+                const totalElement = document.getElementById('totalCount');
+                const successElement = document.getElementById('successCount');
+                const problemElement = document.getElementById('problemCount');
+
+                if (totalElement) totalElement.textContent = dailyLogs.length;
+                if (successElement) {
+                    successElement.textContent = dailyLogs.filter((record) => record.status === 'เรียบร้อย').length;
+                }
+                if (problemElement) {
+                    problemElement.textContent = dailyLogs.filter((record) => record.status === 'ไม่เรียบร้อย').length;
+                }
+            }
+
+            const previousRenderDashboard = window.renderDashboard;
+            if (typeof previousRenderDashboard === 'function') {
+                window.renderDashboard = function () {
+                    const result = previousRenderDashboard.apply(this, arguments);
+                    updateDailySummaryCounters();
+                    return result;
+                };
+            }
+
+            document.addEventListener('DOMContentLoaded', updateDailySummaryCounters);
+            document.addEventListener('change', (event) => {
+                if (event.target?.id === 'filterDate') {
+                    setTimeout(updateDailySummaryCounters, 0);
+                }
+            });
+        })();
+    </script>
+
+
+
+    <!-- Final dashboard date-filter compatibility patch: additive only -->
+    <script>
+        (function () {
+            function localTodayValue() {
+                const now = new Date();
+                return [
+                    now.getFullYear(),
+                    String(now.getMonth() + 1).padStart(2, '0'),
+                    String(now.getDate()).padStart(2, '0')
+                ].join('-');
+            }
+
+            function normalizeRecordDate(value) {
+                const raw = String(value || '').trim();
+                if (!raw) return '';
+
+                // yyyy-mm-dd or yyyy/mm/dd (รองรับปี พ.ศ.)
+                let match = raw.match(/^(\d{4})[-\/](\d{1,2})[-\/](\d{1,2})/);
+                if (match) {
+                    let year = Number(match[1]);
+                    if (year > 2400) year -= 543;
+                    return `${year}-${String(match[2]).padStart(2, '0')}-${String(match[3]).padStart(2, '0')}`;
+                }
+
+                // dd/mm/yyyy or dd-mm-yyyy (รองรับปี พ.ศ.)
+                match = raw.match(/^(\d{1,2})[-\/](\d{1,2})[-\/](\d{4})/);
+                if (match) {
+                    let year = Number(match[3]);
+                    if (year > 2400) year -= 543;
+                    return `${year}-${String(match[2]).padStart(2, '0')}-${String(match[1]).padStart(2, '0')}`;
+                }
+
+                // ISO datetime
+                const parsed = new Date(raw);
+                if (!Number.isNaN(parsed.getTime())) {
+                    return [
+                        parsed.getFullYear(),
+                        String(parsed.getMonth() + 1).padStart(2, '0'),
+                        String(parsed.getDate()).padStart(2, '0')
+                    ].join('-');
+                }
+
+                return raw;
+            }
+
+            window.renderDashboard = function () {
+                const tbody = document.getElementById('dashboardTableBody');
+                const dateInput = document.getElementById('filterDate');
+                const statusInput = document.getElementById('filterStatus');
+                if (!tbody || !dateInput || !statusInput) return;
+
+                const today = localTodayValue();
+                dateInput.max = today;
+
+                // กำหนดวันนี้เฉพาะตอนที่ยังไม่เคยเลือกวันที่
+                if (!dateInput.value) dateInput.value = today;
+
+                const selectedDate = dateInput.value;
+                const selectedStatus = statusInput.value;
+                const sourceLogs = Array.isArray(logs) ? logs : [];
+
+                const dailyLogs = sourceLogs.filter((record) =>
+                    normalizeRecordDate(record.date) === selectedDate
+                );
+
+                const filteredLogs = dailyLogs.filter((record) =>
+                    selectedStatus === 'ทั้งหมด' || record.status === selectedStatus
+                );
+
+                document.getElementById('totalCount').textContent = dailyLogs.length;
+                document.getElementById('successCount').textContent = dailyLogs.filter(
+                    (record) => record.status === 'เรียบร้อย'
+                ).length;
+                document.getElementById('problemCount').textContent = dailyLogs.filter(
+                    (record) => record.status === 'ไม่เรียบร้อย'
+                ).length;
+
+                if (filteredLogs.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="6" class="p-8 text-center text-gray-500">ไม่พบข้อมูลในวันที่เลือก</td></tr>';
+                    return;
+                }
+
+                tbody.innerHTML = filteredLogs.map((record) => `
+                    <tr class="border-b hover:bg-gray-50">
+                        <td class="p-4 whitespace-nowrap">${escapeHtml(formatThaiDate(normalizeRecordDate(record.date)))}</td>
+                        <td class="p-4 whitespace-nowrap">${escapeHtml(record.time || '-')}</td>
+                        <td class="p-4 font-semibold">${escapeHtml(record.location || '-')}</td>
+                        <td class="p-4">${escapeHtml(record.items || '-')}</td>
+                        <td class="p-4">
+                            <span class="px-3 py-1 rounded-full text-sm font-bold ${record.status === 'ไม่เรียบร้อย' ? 'bg-red-100 text-red-600' : 'bg-green-100 text-green-600'}">
+                                ${escapeHtml(record.status || '-')}
+                            </span>
+                            ${record.reason ? `<div class="text-xs text-red-500 mt-1">เหตุผล: ${escapeHtml(record.reason)}</div>` : ''}
+                        </td>
+                        <td class="p-4 text-gray-500">${escapeHtml(record.admin || '-')}</td>
+                    </tr>
+                `).join('');
+            };
+
+            document.addEventListener('DOMContentLoaded', () => {
+                const dateInput = document.getElementById('filterDate');
+                if (!dateInput) return;
+
+                dateInput.max = localTodayValue();
+                if (!dateInput.value) dateInput.value = localTodayValue();
+
+                // เรียกหลัง onchange เดิม เพื่อยืนยันว่าค่าวันที่ผู้ใช้เลือกไม่ถูกรีเซ็ต
+                dateInput.addEventListener('change', () => {
+                    const selected = dateInput.value;
+                    requestAnimationFrame(() => {
+                        dateInput.value = selected;
+                        window.renderDashboard();
+                    });
+                });
+            });
+        })();
+    </script>
+
 </body>
 </html>
