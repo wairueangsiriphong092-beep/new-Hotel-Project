@@ -1278,7 +1278,7 @@ const GasConnector = (function () {
   // ส่งข้อมูลการจองใหม่ -> บันทึกลง Google Sheet (คอลัมน์ A-J)
   function submitBooking(payload) {
     if (!isConfigured()) {
-      return Promise.reject(new Error('ยังไม่ได้ตั้งค่า GAS_URL ในไฟล์ assets/js/config.js'));
+      return Promise.reject(new Error('https://script.google.com/macros/s/AKfycbzqR1bIgffpilYGUwHiQ3wk_v9Mtp5ExI8elVeyB6Rmz230-fZice-xnqf6BYeQjyjk/exec'));
     }
     return fetch(GAS_URL, {
       method: 'POST',
@@ -1298,7 +1298,7 @@ const GasConnector = (function () {
   // ดึงรายการจองทั้งหมดจาก Google Sheet มาแสดงในหน้า Admin
   function fetchBookings() {
     if (!isConfigured()) {
-      return Promise.resolve({ result: 'error', message: 'ยังไม่ได้ตั้งค่า GAS_URL', bookings: [] });
+      return Promise.resolve({ result: 'error', message: 'https://script.google.com/macros/s/AKfycbzqR1bIgffpilYGUwHiQ3wk_v9Mtp5ExI8elVeyB6Rmz230-fZice-xnqf6BYeQjyjk/exec', bookings: [] });
     }
     return fetch(GAS_URL + '?action=list')
       .then(res => res.json())
@@ -1311,7 +1311,7 @@ const GasConnector = (function () {
   // อัปเดตสถานะการจอง (คอลัมน์ J) ผ่าน bookingId
   function updateBookingStatus(bookingId, status) {
     if (!isConfigured()) {
-      return Promise.reject(new Error('ยังไม่ได้ตั้งค่า GAS_URL ในไฟล์ assets/js/config.js'));
+      return Promise.reject(new Error('https://script.google.com/macros/s/AKfycbzqR1bIgffpilYGUwHiQ3wk_v9Mtp5ExI8elVeyB6Rmz230-fZice-xnqf6BYeQjyjk/exec'));
     }
     const url = GAS_URL 
       + '?action=updateStatus'
@@ -1328,7 +1328,7 @@ const GasConnector = (function () {
   // อัปเดตสถานะการจอง (คอลัมน์ J) ผ่าน bookingId
   function updateBookingStatus(bookingId, status) {
     if (!isConfigured()) {
-      return Promise.reject(new Error('ยังไม่ได้ตั้งค่า GAS_URL ในไฟล์ assets/js/config.js'));
+      return Promise.reject(new Error('https://script.google.com/macros/s/AKfycbzqR1bIgffpilYGUwHiQ3wk_v9Mtp5ExI8elVeyB6Rmz230-fZice-xnqf6BYeQjyjk/exec'));
     }
     const url = GAS_URL
       + '?action=updateStatus'
