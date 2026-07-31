@@ -1107,5 +1107,131 @@
         }
     </script>
 
+
+    <!-- Login logo extension: added without modifying existing code -->
+    <style>
+        #loginView h1::before {
+            display: none !important;
+        }
+
+        #loginHotelLogo {
+            display: block;
+            width: 96px;
+            height: 96px;
+            margin: 0 auto 1rem;
+            object-fit: cover;
+            object-position: center;
+            border-radius: 24px;
+            border: 1px solid rgba(191, 219, 254, .95);
+            background: #ffffff;
+            box-shadow:
+                0 16px 34px rgba(37, 99, 235, .18),
+                0 4px 12px rgba(15, 23, 42, .10);
+        }
+
+        @media (max-width: 640px) {
+            #loginHotelLogo {
+                width: 82px;
+                height: 82px;
+                border-radius: 21px;
+            }
+        }
+    </style>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const loginTitle = document.querySelector('#loginView h1');
+
+            if (loginTitle && !document.getElementById('loginHotelLogo')) {
+                const loginLogo = document.createElement('img');
+                loginLogo.id = 'loginHotelLogo';
+                loginLogo.src = 'https://github.com/wairueangsiriphong092-beep/new-Hotel-Project/blob/main/472259957_122201758910228345_7566080559903616825_n%20(1).jpg?raw=true';
+                loginLogo.alt = 'โรงแรมแฮปปี้ไนท์';
+                loginLogo.loading = 'eager';
+                loginLogo.decoding = 'async';
+                loginTitle.insertAdjacentElement('beforebegin', loginLogo);
+            }
+        });
+    </script>
+
+
+
+    <!-- Dashboard daily-view extension: added without modifying existing code -->
+    <script>
+        (function () {
+            function getLocalDateValue() {
+                const now = new Date();
+                const year = now.getFullYear();
+                const month = String(now.getMonth() + 1).padStart(2, '0');
+                const day = String(now.getDate()).padStart(2, '0');
+                return `${year}-${month}-${day}`;
+            }
+
+            function applyAutomaticTodayFilter() {
+                const dateInput = document.getElementById('filterDate');
+                if (!dateInput) return;
+
+                const today = getLocalDateValue();
+                dateInput.max = today;
+
+                if (dateInput.dataset.dateMode !== 'manual') {
+                    dateInput.value = today;
+                    dateInput.dataset.dateMode = 'auto';
+                }
+            }
+
+            const originalRenderDashboard = window.renderDashboard;
+            if (typeof originalRenderDashboard === 'function') {
+                window.renderDashboard = function () {
+                    applyAutomaticTodayFilter();
+                    return originalRenderDashboard.apply(this, arguments);
+                };
+            }
+
+            document.addEventListener('DOMContentLoaded', () => {
+                const dateInput = document.getElementById('filterDate');
+                if (!dateInput) return;
+
+                applyAutomaticTodayFilter();
+
+                dateInput.addEventListener('change', () => {
+                    const today = getLocalDateValue();
+                    dateInput.dataset.dateMode = dateInput.value && dateInput.value !== today
+                        ? 'manual'
+                        : 'auto';
+                });
+            });
+        })();
+    </script>
+
+
+
+    <!-- Dashboard historical-date fix: additive patch only -->
+    <script>
+        (function () {
+            function getLocalDateValueFixed() {
+                const now = new Date();
+                const year = now.getFullYear();
+                const month = String(now.getMonth() + 1).padStart(2, '0');
+                const day = String(now.getDate()).padStart(2, '0');
+                return `${year}-${month}-${day}`;
+            }
+
+            function markSelectedDateBeforeRender(event) {
+                const dateInput = event.target;
+                if (!dateInput || dateInput.id !== 'filterDate') return;
+
+                const today = getLocalDateValueFixed();
+                dateInput.dataset.dateMode = dateInput.value && dateInput.value !== today
+                    ? 'manual'
+                    : 'auto';
+            }
+
+            // ใช้ capture เพื่อกำหนดโหมดก่อน onchange เดิมเรียก renderDashboard()
+            document.addEventListener('change', markSelectedDateBeforeRender, true);
+            document.addEventListener('input', markSelectedDateBeforeRender, true);
+        })();
+    </script>
+
 </body>
 </html>
