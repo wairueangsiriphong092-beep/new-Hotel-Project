@@ -17,7 +17,6 @@
             backdrop-filter: blur(15px);
             border: 1px solid rgba(255, 255, 255, 0.3);
         }
-        /* Custom Checkbox Style */
         .item-card {
             transition: all 0.3s ease;
             cursor: pointer;
@@ -29,6 +28,10 @@
             border-color: #3b82f6;
             box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.2);
         }
+        button:disabled {
+            cursor: not-allowed;
+            opacity: 0.65;
+        }
     </style>
 </head>
 <body class="min-h-screen p-4 md:p-8">
@@ -36,16 +39,19 @@
     <div id="loginView" class="max-w-md mx-auto glass p-8 rounded-3xl shadow-2xl">
         <h1 class="text-3xl font-bold text-center mb-8 text-gray-800">โรงแรมแฮปปี้ไนท์</h1>
         <div class="space-y-4">
-            <input type="text" id="username" placeholder="Username" class="w-full p-4 border rounded-2xl bg-white shadow-inner focus:ring-2 focus:ring-blue-400 outline-none">
-            <input type="password" id="password" placeholder="Password" class="w-full p-4 border rounded-2xl bg-white shadow-inner focus:ring-2 focus:ring-blue-400 outline-none">
-            <button onclick="login()" class="w-full bg-blue-600 text-white py-4 rounded-2xl font-bold hover:bg-blue-700 shadow-lg transition transform active:scale-95">เข้าสู่ระบบ</button>
+            <input type="text" id="username" autocomplete="username" placeholder="Username" class="w-full p-4 border rounded-2xl bg-white shadow-inner focus:ring-2 focus:ring-blue-400 outline-none">
+            <input type="password" id="password" autocomplete="current-password" placeholder="Password" class="w-full p-4 border rounded-2xl bg-white shadow-inner focus:ring-2 focus:ring-blue-400 outline-none">
+            <button id="loginButton" onclick="login()" class="w-full bg-blue-600 text-white py-4 rounded-2xl font-bold hover:bg-blue-700 shadow-lg transition transform active:scale-95">เข้าสู่ระบบ</button>
         </div>
-        <p id="loginError" class="text-red-500 text-center mt-4 hidden font-medium">Username หรือ Password ไม่ถูกต้อง</p>
+        <p id="loginError" class="text-red-500 text-center mt-4 hidden font-medium"></p>
     </div>
 
     <div id="appView" class="max-w-2xl mx-auto glass p-6 md:p-8 rounded-3xl shadow-2xl hidden">
         <div class="flex justify-between items-center mb-8">
-            <h2 class="text-2xl font-bold text-gray-800">บันทึกข้อมูล</h2>
+            <div>
+                <h2 class="text-2xl font-bold text-gray-800">บันทึกข้อมูล</h2>
+                <p id="currentUserLabel" class="text-sm text-gray-500 mt-1"></p>
+            </div>
             <button onclick="toggleDashboard()" class="text-blue-600 font-semibold hover:underline transition">ดู Dashboard</button>
         </div>
 
@@ -54,7 +60,7 @@
                 <label class="block text-lg font-semibold mb-3 text-gray-700">สถานที่</label>
                 <select id="locationSelect" class="w-full p-4 border-2 border-gray-200 rounded-2xl bg-white focus:ring-4 focus:ring-blue-100 outline-none"></select>
             </div>
-            
+
             <div>
                 <label class="block text-lg font-semibold mb-4 text-gray-700">รายการที่ตรวจ</label>
                 <div class="grid grid-cols-2 gap-3" id="itemChecklist">
@@ -88,17 +94,39 @@
                     <option value="ไม่เรียบร้อย">ไม่เรียบร้อย ⚠️</option>
                 </select>
                 <div id="reasonContainer" class="hidden mt-3 animate-in fade-in duration-300">
-                    <input type="text" id="reasonInput" placeholder="ระบุสาเหตุที่ไม่เรียบร้อย..." class="w-full p-4 border-2 border-red-200 rounded-2xl bg-white focus:ring-4 focus:ring-red-100 outline-none">
+                    <input type="text" id="reasonInput" maxlength="500" placeholder="ระบุสาเหตุที่ไม่เรียบร้อย..." class="w-full p-4 border-2 border-red-200 rounded-2xl bg-white focus:ring-4 focus:ring-red-100 outline-none">
                 </div>
             </div>
-            
-            <button onclick="submitRecord()" class="w-full bg-blue-600 text-white py-5 rounded-2xl font-bold text-lg hover:bg-blue-700 shadow-xl transition transform active:scale-95">บันทึกข้อมูล</button>
-            <div id="saveStatus" class="hidden text-center text-green-700 font-bold p-4 bg-green-50 rounded-2xl">บันทึกข้อมูลแล้ว! ✅</div>
+
+            <button id="saveButton" onclick="submitRecord()" class="w-full bg-blue-600 text-white py-5 rounded-2xl font-bold text-lg hover:bg-blue-700 shadow-xl transition transform active:scale-95">บันทึกข้อมูล</button>
+            <div id="saveStatus" class="hidden text-center font-bold p-4 rounded-2xl"></div>
         </div>
     </div>
 
-    <div id="dashboardView" class="max-w-5xl mx-auto glass p-6 md:p-8 rounded-3xl shadow-2xl hidden mt-8">
-        <h2 class="text-2xl font-bold mb-6">Dashboard</h2>
+    <div id="dashboardView" class="max-w-6xl mx-auto glass p-6 md:p-8 rounded-3xl shadow-2xl hidden mt-8">
+        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-6">
+            <div>
+                <h2 class="text-2xl font-bold">Dashboard</h2>
+                <p id="lastUpdated" class="text-sm text-gray-500 mt-1">ยังไม่ได้โหลดข้อมูล</p>
+            </div>
+            <button id="refreshButton" onclick="loadDashboardData(true)" class="bg-blue-50 text-blue-700 px-4 py-2 rounded-xl font-semibold hover:bg-blue-100">รีเฟรชข้อมูล</button>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+            <div class="bg-blue-50 p-4 rounded-2xl">
+                <p class="text-sm text-blue-600">รายการทั้งหมด</p>
+                <p id="totalCount" class="text-3xl font-bold text-blue-800">0</p>
+            </div>
+            <div class="bg-green-50 p-4 rounded-2xl">
+                <p class="text-sm text-green-600">เรียบร้อย</p>
+                <p id="successCount" class="text-3xl font-bold text-green-800">0</p>
+            </div>
+            <div class="bg-red-50 p-4 rounded-2xl">
+                <p class="text-sm text-red-600">ไม่เรียบร้อย</p>
+                <p id="problemCount" class="text-3xl font-bold text-red-800">0</p>
+            </div>
+        </div>
+
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
             <input type="text" id="searchInput" oninput="renderDashboard()" placeholder="ค้นหาสถานที่..." class="p-4 border-2 rounded-2xl">
             <input type="date" id="filterDate" onchange="renderDashboard()" class="p-4 border-2 rounded-2xl">
@@ -108,11 +136,19 @@
                 <option value="ไม่เรียบร้อย">ไม่เรียบร้อย</option>
             </select>
         </div>
+
+        <div id="dashboardMessage" class="hidden text-center p-4 mb-4 rounded-2xl"></div>
+
         <div class="overflow-x-auto">
-            <table class="w-full text-left border-collapse">
+            <table class="w-full text-left border-collapse min-w-[800px]">
                 <thead>
                     <tr class="border-b-2 border-gray-200">
-                        <th class="p-4">เวลา</th><th class="p-4">สถานที่</th><th class="p-4">รายการ</th><th class="p-4">สถานะ</th><th class="p-4">ผู้ตรวจ</th>
+                        <th class="p-4">วันที่</th>
+                        <th class="p-4">เวลา</th>
+                        <th class="p-4">สถานที่</th>
+                        <th class="p-4">รายการ</th>
+                        <th class="p-4">สถานะ</th>
+                        <th class="p-4">ผู้ตรวจ</th>
                     </tr>
                 </thead>
                 <tbody id="dashboardTableBody"></tbody>
@@ -122,94 +158,316 @@
     </div>
 
     <script>
-        const ADMINS = { "admin1": "pass1", "admin2": "pass2", "admin3": "pass3" };
-        let currentAdmin = "";
-        let logs = []; 
+        // ใส่ URL ที่ได้จาก Deploy > New deployment > Web app และต้องลงท้ายด้วย /exec
+        const GAS_WEB_APP_URL = 'PUT_YOUR_GOOGLE_APPS_SCRIPT_WEB_APP_URL_HERE';
 
-        function login() {
-            const user = document.getElementById('username').value;
+        // Dashboard จะดึงข้อมูลใหม่ทุก 5 วินาทีขณะเปิดอยู่ (near real-time)
+        const DASHBOARD_REFRESH_MS = 5000;
+
+        let currentAdmin = '';
+        let currentPassword = '';
+        let logs = [];
+        let dashboardTimer = null;
+        let dashboardLoading = false;
+
+        document.getElementById('password').addEventListener('keydown', (event) => {
+            if (event.key === 'Enter') login();
+        });
+
+        function isApiConfigured() {
+            return GAS_WEB_APP_URL.startsWith('https://script.google.com/macros/s/') && GAS_WEB_APP_URL.endsWith('/exec');
+        }
+
+        async function callApi(action, payload = {}) {
+            if (!isApiConfigured()) {
+                throw new Error('กรุณาใส่ Google Apps Script Web App URL ในตัวแปร GAS_WEB_APP_URL ก่อนใช้งาน');
+            }
+
+            const formData = new URLSearchParams({
+                action,
+                username: currentAdmin,
+                password: currentPassword,
+                ...payload
+            });
+
+            const response = await fetch(GAS_WEB_APP_URL, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8'
+                },
+                body: formData.toString(),
+                redirect: 'follow',
+                cache: 'no-store'
+            });
+
+            if (!response.ok) {
+                throw new Error(`เชื่อมต่อเซิร์ฟเวอร์ไม่สำเร็จ (HTTP ${response.status})`);
+            }
+
+            const text = await response.text();
+            let result;
+            try {
+                result = JSON.parse(text);
+            } catch (error) {
+                throw new Error('รูปแบบข้อมูลที่ได้รับจาก Apps Script ไม่ถูกต้อง กรุณาตรวจสอบ URL และสิทธิ์การ Deploy');
+            }
+
+            if (!result.success) {
+                throw new Error(result.message || 'เกิดข้อผิดพลาดจากเซิร์ฟเวอร์');
+            }
+
+            return result;
+        }
+
+        async function login() {
+            const user = document.getElementById('username').value.trim();
             const pass = document.getElementById('password').value;
-            if(ADMINS[user] && ADMINS[user] === pass) {
-                currentAdmin = user;
+            const loginButton = document.getElementById('loginButton');
+            const loginError = document.getElementById('loginError');
+
+            loginError.classList.add('hidden');
+
+            if (!user || !pass) {
+                showLoginError('กรุณากรอก Username และ Password');
+                return;
+            }
+
+            currentAdmin = user;
+            currentPassword = pass;
+            setButtonLoading(loginButton, true, 'กำลังเข้าสู่ระบบ...');
+
+            try {
+                await callApi('login');
                 document.getElementById('loginView').classList.add('hidden');
                 document.getElementById('appView').classList.remove('hidden');
+                document.getElementById('currentUserLabel').textContent = `ผู้ใช้งาน: ${currentAdmin}`;
                 initForm();
-            } else {
-                document.getElementById('loginError').classList.remove('hidden');
+            } catch (error) {
+                currentAdmin = '';
+                currentPassword = '';
+                showLoginError(error.message);
+            } finally {
+                setButtonLoading(loginButton, false, 'เข้าสู่ระบบ');
             }
+        }
+
+        function showLoginError(message) {
+            const loginError = document.getElementById('loginError');
+            loginError.textContent = message;
+            loginError.classList.remove('hidden');
         }
 
         function initForm() {
             const select = document.getElementById('locationSelect');
             select.innerHTML = '<option value="">เลือกห้อง/บ้าน</option>';
-            for(let i=1; i<=24; i++) select.innerHTML += `<option>ห้อง ${i}</option>`;
-            for(let i=1; i<=3; i++) select.innerHTML += `<option>บ้าน ${i}</option>`;
+            for (let i = 1; i <= 24; i++) select.insertAdjacentHTML('beforeend', `<option value="ห้อง ${i}">ห้อง ${i}</option>`);
+            for (let i = 1; i <= 3; i++) select.insertAdjacentHTML('beforeend', `<option value="บ้าน ${i}">บ้าน ${i}</option>`);
         }
 
         function toggleAll() {
             const checked = document.getElementById('checkAll').checked;
-            document.querySelectorAll('.item-check').forEach(i => i.checked = checked);
+            document.querySelectorAll('.item-check').forEach((item) => {
+                item.checked = checked;
+            });
         }
 
         function toggleReason() {
             const status = document.getElementById('statusSelect').value;
-            document.getElementById('reasonContainer').classList.toggle('hidden', status !== 'ไม่เรียบร้อย');
+            const reasonContainer = document.getElementById('reasonContainer');
+            reasonContainer.classList.toggle('hidden', status !== 'ไม่เรียบร้อย');
+            if (status === 'เรียบร้อย') document.getElementById('reasonInput').value = '';
         }
 
-        function submitRecord() {
+        async function submitRecord() {
             const location = document.getElementById('locationSelect').value;
-            if(!location) return alert('โปรดเลือกสถานที่');
-            
-            const selectedItems = Array.from(document.querySelectorAll('.item-check:checked')).map(i => i.value);
-            if(selectedItems.length === 0 && !document.getElementById('checkAll').checked) return alert('โปรดเลือกจุดที่ตรวจ');
-            
+            const status = document.getElementById('statusSelect').value;
+            const reason = document.getElementById('reasonInput').value.trim();
+            const selectedItems = Array.from(document.querySelectorAll('.item-check:checked')).map((item) => item.value);
+            const isAllChecked = document.getElementById('checkAll').checked;
+            const saveButton = document.getElementById('saveButton');
+
+            if (!location) return alert('โปรดเลือกสถานที่');
+            if (selectedItems.length === 0 && !isAllChecked) return alert('โปรดเลือกจุดที่ตรวจ');
+            if (status === 'ไม่เรียบร้อย' && !reason) return alert('โปรดระบุสาเหตุที่ไม่เรียบร้อย');
+
             const record = {
-                time: new Date().toLocaleTimeString('th-TH'),
-                date: new Date().toISOString().split('T')[0],
-                location: location,
-                items: document.getElementById('checkAll').checked ? 'ทั้งหมด' : selectedItems.join(', '),
-                status: document.getElementById('statusSelect').value,
-                reason: document.getElementById('reasonInput').value,
-                admin: currentAdmin
+                location,
+                items: isAllChecked ? 'ทั้งหมด' : selectedItems.join(', '),
+                status,
+                reason
             };
-            logs.push(record);
-            
-            const statusDiv = document.getElementById('saveStatus');
-            statusDiv.classList.remove('hidden');
-            setTimeout(() => statusDiv.classList.add('hidden'), 2000);
+
+            setButtonLoading(saveButton, true, 'กำลังบันทึก...');
+            hideSaveStatus();
+
+            try {
+                const result = await callApi('saveRecord', {
+                    record: JSON.stringify(record)
+                });
+                showSaveStatus(result.message || 'บันทึกข้อมูลลง Google Sheet แล้ว ✅', true);
+                resetForm();
+
+                // เพิ่มข้อมูลใหม่ทันที และโหลดจาก Sheet ซ้ำเพื่อยืนยันข้อมูลจริง
+                if (result.record) {
+                    logs.unshift(result.record);
+                    renderDashboard();
+                }
+                await loadDashboardData(false);
+            } catch (error) {
+                showSaveStatus(error.message, false);
+            } finally {
+                setButtonLoading(saveButton, false, 'บันทึกข้อมูล');
+            }
         }
 
-        function toggleDashboard() {
-            document.getElementById('appView').classList.toggle('hidden');
-            document.getElementById('dashboardView').classList.toggle('hidden');
-            if(!document.getElementById('dashboardView').classList.contains('hidden')) renderDashboard();
+        function resetForm() {
+            document.getElementById('locationSelect').value = '';
+            document.querySelectorAll('.item-check').forEach((item) => {
+                item.checked = false;
+            });
+            document.getElementById('checkAll').checked = false;
+            document.getElementById('statusSelect').value = 'เรียบร้อย';
+            document.getElementById('reasonInput').value = '';
+            toggleReason();
+        }
+
+        function showSaveStatus(message, success) {
+            const statusDiv = document.getElementById('saveStatus');
+            statusDiv.textContent = message;
+            statusDiv.className = `text-center font-bold p-4 rounded-2xl ${success ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`;
+            statusDiv.classList.remove('hidden');
+            if (success) setTimeout(hideSaveStatus, 3000);
+        }
+
+        function hideSaveStatus() {
+            document.getElementById('saveStatus').classList.add('hidden');
+        }
+
+        async function toggleDashboard() {
+            const appView = document.getElementById('appView');
+            const dashboardView = document.getElementById('dashboardView');
+            const openingDashboard = dashboardView.classList.contains('hidden');
+
+            appView.classList.toggle('hidden');
+            dashboardView.classList.toggle('hidden');
+
+            if (openingDashboard) {
+                await loadDashboardData(true);
+                startDashboardPolling();
+            } else {
+                stopDashboardPolling();
+            }
+        }
+
+        function startDashboardPolling() {
+            stopDashboardPolling();
+            dashboardTimer = setInterval(() => {
+                if (!document.hidden) loadDashboardData(false);
+            }, DASHBOARD_REFRESH_MS);
+        }
+
+        function stopDashboardPolling() {
+            if (dashboardTimer) {
+                clearInterval(dashboardTimer);
+                dashboardTimer = null;
+            }
+        }
+
+        async function loadDashboardData(showLoading = true) {
+            if (dashboardLoading || !currentAdmin) return;
+            dashboardLoading = true;
+
+            const refreshButton = document.getElementById('refreshButton');
+            if (showLoading) {
+                setButtonLoading(refreshButton, true, 'กำลังโหลด...');
+                showDashboardMessage('กำลังดึงข้อมูลจาก Google Sheet...', true);
+            }
+
+            try {
+                const result = await callApi('getRecords');
+                logs = Array.isArray(result.records) ? result.records : [];
+                renderDashboard();
+                document.getElementById('lastUpdated').textContent = `อัปเดตล่าสุด ${new Date().toLocaleString('th-TH')}`;
+                hideDashboardMessage();
+            } catch (error) {
+                showDashboardMessage(error.message, false);
+            } finally {
+                dashboardLoading = false;
+                if (showLoading) setButtonLoading(refreshButton, false, 'รีเฟรชข้อมูล');
+            }
         }
 
         function renderDashboard() {
             const tbody = document.getElementById('dashboardTableBody');
-            const search = document.getElementById('searchInput').value.toLowerCase();
+            const search = document.getElementById('searchInput').value.trim().toLowerCase();
             const date = document.getElementById('filterDate').value;
             const status = document.getElementById('filterStatus').value;
 
-            tbody.innerHTML = logs.filter(l => 
-                (l.location.toLowerCase().includes(search)) &&
-                (date === '' || l.date === date) &&
-                (status === 'ทั้งหมด' || l.status === status)
-            ).map(l => `
+            const filteredLogs = logs.filter((record) =>
+                String(record.location || '').toLowerCase().includes(search) &&
+                (date === '' || record.date === date) &&
+                (status === 'ทั้งหมด' || record.status === status)
+            );
+
+            document.getElementById('totalCount').textContent = logs.length;
+            document.getElementById('successCount').textContent = logs.filter((record) => record.status === 'เรียบร้อย').length;
+            document.getElementById('problemCount').textContent = logs.filter((record) => record.status === 'ไม่เรียบร้อย').length;
+
+            if (filteredLogs.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" class="p-8 text-center text-gray-500">ไม่พบข้อมูล</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = filteredLogs.map((record) => `
                 <tr class="border-b hover:bg-gray-50">
-                    <td class="p-4">${l.time}</td>
-                    <td class="p-4 font-semibold">${l.location}</td>
-                    <td class="p-4">${l.items}</td>
+                    <td class="p-4 whitespace-nowrap">${escapeHtml(formatThaiDate(record.date))}</td>
+                    <td class="p-4 whitespace-nowrap">${escapeHtml(record.time || '-')}</td>
+                    <td class="p-4 font-semibold">${escapeHtml(record.location || '-')}</td>
+                    <td class="p-4">${escapeHtml(record.items || '-')}</td>
                     <td class="p-4">
-                        <span class="px-3 py-1 rounded-full text-sm font-bold ${l.status === 'ไม่เรียบร้อย' ? 'bg-red-100 text-red-600' : 'bg-green-100 text-green-600'}">
-                            ${l.status}
+                        <span class="px-3 py-1 rounded-full text-sm font-bold ${record.status === 'ไม่เรียบร้อย' ? 'bg-red-100 text-red-600' : 'bg-green-100 text-green-600'}">
+                            ${escapeHtml(record.status || '-')}
                         </span>
-                        ${l.reason ? `<div class="text-xs text-red-400 mt-1 italic">เหตุผล: ${l.reason}</div>` : ''}
+                        ${record.reason ? `<div class="text-xs text-red-500 mt-1">เหตุผล: ${escapeHtml(record.reason)}</div>` : ''}
                     </td>
-                    <td class="p-4 text-gray-500">${l.admin}</td>
+                    <td class="p-4 text-gray-500">${escapeHtml(record.admin || '-')}</td>
                 </tr>
             `).join('');
         }
+
+        function formatThaiDate(dateString) {
+            if (!dateString) return '-';
+            const parts = dateString.split('-');
+            if (parts.length !== 3) return dateString;
+            return `${parts[2]}/${parts[1]}/${Number(parts[0]) + 543}`;
+        }
+
+        function escapeHtml(value) {
+            return String(value ?? '')
+                .replaceAll('&', '&amp;')
+                .replaceAll('<', '&lt;')
+                .replaceAll('>', '&gt;')
+                .replaceAll('"', '&quot;')
+                .replaceAll("'", '&#039;');
+        }
+
+        function setButtonLoading(button, loading, text) {
+            button.disabled = loading;
+            button.textContent = text;
+        }
+
+        function showDashboardMessage(message, isInfo) {
+            const element = document.getElementById('dashboardMessage');
+            element.textContent = message;
+            element.className = `text-center p-4 mb-4 rounded-2xl ${isInfo ? 'bg-blue-50 text-blue-700' : 'bg-red-50 text-red-700'}`;
+            element.classList.remove('hidden');
+        }
+
+        function hideDashboardMessage() {
+            document.getElementById('dashboardMessage').classList.add('hidden');
+        }
+
+        window.addEventListener('beforeunload', stopDashboardPolling);
     </script>
 </body>
 </html>
