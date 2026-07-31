@@ -1325,23 +1325,6 @@ const GasConnector = (function () {
       });
   }
 
-  // อัปเดตสถานะการจอง (คอลัมน์ J) ผ่าน bookingId
-  function updateBookingStatus(bookingId, status) {
-    if (!isConfigured()) {
-      return Promise.reject(new Error('https://script.google.com/macros/s/AKfycbzqR1bIgffpilYGUwHiQ3wk_v9Mtp5ExI8elVeyB6Rmz230-fZice-xnqf6BYeQjyjk/exec'));
-    }
-    const url = GAS_URL
-      + '?action=updateStatus'
-      + '&bookingId=' + encodeURIComponent(bookingId)
-      + '&status=' + encodeURIComponent(status);
-    return fetch(url)
-      .then(res => res.json())
-      .catch(err => {
-        console.error('updateBookingStatus error:', err);
-        return { result: 'error', message: err.message };
-      });
-  }
-
   return { isConfigured, submitBooking, fetchBookings, updateBookingStatus };
 })();
 
