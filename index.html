@@ -1244,6 +1244,87 @@ html{ scroll-behavior:smooth; }
 
 <script>
 /* ================================================================
+   CONFIG — ตั้งค่าการเชื่อมต่อ Google Apps Script
+   ================================================================
+   1. เปิดโปรเจกต์ Google Apps Script ของคุณ (ไฟล์ Code.gs ในโฟลเดอร์
+      google-apps-script/ ของโปรเจกต์นี้)
+   2. กด Deploy > New deployment > เลือกประเภทเป็น "Web app"
+      - Execute as: Me
+      - Who has access: Anyone
+   3. คัดลอก URL ที่ได้ (ลงท้ายด้วย /exec) มาวางแทนที่ค่าด้านล่างนี้
+================================================================ */
+const GAS_URL = "วาง_WEB_APP_URL_ของคุณตรงนี้"; // ตัวอย่าง: https://script.google.com/macros/s/AKfycb.../exec
+
+/* ================================================================
+   GAS CONNECTOR — เชื่อมต่อหน้าเว็บกับ Google Apps Script / Google Sheet
+   ================================================================
+   ทุกฟังก์ชันในไฟล์นี้คืนค่าเป็น Promise ที่ resolve เป็น object รูปแบบ
+   { result: "success" | "error", ... } ตามที่ฝั่ง Code.gs ส่งกลับมา
+
+   หมายเหตุสำคัญเรื่อง CORS:
+   - ตอนส่งข้อมูล (POST) ให้ "ห้าม" ตั้ง header Content-Type เป็น
+     application/json เพราะจะทำให้เบราว์เซอร์ยิง preflight (OPTIONS)
+     ซึ่ง Google Apps Script Web App ไม่รองรับ ให้ปล่อยเป็นค่าเริ่มต้น
+     (text/plain) แล้วฝั่ง Code.gs จะ JSON.parse(e.postData.contents) เอง
+================================================================ */
+const GasConnector = (function () {
+
+  function isConfigured() {
+    return typeof GAS_URL === 'string' &&
+           GAS_URL.trim() !== '' &&
+           !GAS_URL.includes('วาง_WEB_APP_URL');
+  }
+
+  // ส่งข้อมูลการจองใหม่ -> บันทึกลง Google Sheet (คอลัมน์ A-J)
+  function submitBooking(payload) {
+    if (!isConfigured()) {
+      return Promise.reject(new Error('ยังไม่ได้ตั้งค่า GAS_URL ในไฟล์ assets/js/config.js'));
+    }
+    return fetch(GAS_URL, {
+      method: 'POST',
+      body: JSON.stringify(payload)
+    })
+      .then(res => res.json())
+      .catch(err => {
+        console.error('submitBooking error:', err);
+        return { result: 'error', message: err.message };
+      });
+  }
+
+  // ดึงรายการจองทั้งหมดจาก Google Sheet มาแสดงในหน้า Admin
+  function fetchBookings() {
+    if (!isConfigured()) {
+      return Promise.resolve({ result: 'error', message: 'ยังไม่ได้ตั้งค่า GAS_URL', bookings: [] });
+    }
+    return fetch(GAS_URL + '?action=list')
+      .then(res => res.json())
+      .catch(err => {
+        console.error('fetchBookings error:', err);
+        return { result: 'error', message: err.message, bookings: [] };
+      });
+  }
+
+  // อัปเดตสถานะการจอง (คอลัมน์ J) ผ่าน bookingId
+  function updateBookingStatus(bookingId, status) {
+    if (!isConfigured()) {
+      return Promise.reject(new Error('ยังไม่ได้ตั้งค่า GAS_URL ในไฟล์ assets/js/config.js'));
+    }
+    const url = GAS_URL
+      + '?action=updateStatus'
+      + '&bookingId=' + encodeURIComponent(bookingId)
+      + '&status=' + encodeURIComponent(status);
+    return fetch(url)
+      .then(res => res.json())
+      .catch(err => {
+        console.error('updateBookingStatus error:', err);
+        return { result: 'error', message: err.message };
+      });
+  }
+
+  return { isConfigured, submitBooking, fetchBookings, updateBookingStatus };
+})();
+
+/* ================================================================
    DATA STORE (ในหน่วยความจำ - Demo เท่านั้น ไม่มีฐานข้อมูลจริง)
 ================================================================ */
 
@@ -1310,8 +1391,9 @@ let bookings = [
 ];
 
 const STATUS_COLOR = {
-  'รอดำเนินการ':'#d99a2b','ยืนยัน':'#2f9e6b','เข้าพัก':'#14396b','Checkout':'#5b6472','ยกเลิก':'#d1495b'
+  'รออนุมัติ':'#d99a2b','รอดำเนินการ':'#d99a2b','ยืนยัน':'#2f9e6b','เข้าพัก':'#14396b','Checkout':'#5b6472','ยกเลิก':'#d1495b'
 };
+
 
 /* ================================================================
    UTILITIES
@@ -1587,33 +1669,84 @@ document.getElementById('bookingForm').addEventListener('submit', function(e){
 
   const {item} = currentSelection();
   const priceInfo = calcPrice();
+  const finalCheckOut = priceInfo.isTemp ? checkIn : checkOut;
+  const guests = document.getElementById('guestCount').value;
 
-  bookingCounter++;
-  const code = 'BK' + bookingCounter;
+  const submitBtn = form.querySelector('button[type="submit"]');
+  const submitBtnOriginalHtml = submitBtn ? submitBtn.innerHTML : '';
+  if(submitBtn){
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>กำลังบันทึกการจอง...';
+  }
 
-  // เพิ่มเข้ารายการจอง (เชื่อมกับระบบ Admin)
-  bookings.unshift({
-    code, name, phone,
-    type: item.name,
-    checkIn, checkOut: priceInfo.isTemp ? checkIn : checkOut,
-    guests: document.getElementById('guestCount').value,
-    total: priceInfo.total,
-    status:'รอดำเนินการ'
-  });
+  // ข้อมูลที่จะส่งไปบันทึกที่ Google Sheet ผ่าน Google Apps Script
+  const payload = {
+    guestName: name,
+    phone: phone,
+    roomType: item.name,
+    checkIn: checkIn,
+    checkOut: finalCheckOut,
+    guests: guests,
+    price: priceInfo.total
+  };
 
-  // แสดง Popup สรุปรายการจอง
-  document.getElementById('summaryBookingCode').textContent = code;
-  document.getElementById('summaryName').textContent = name;
-  document.getElementById('summaryRoom').textContent = item.name;
-  document.getElementById('summaryDates').textContent = checkIn + ' ถึง ' + (priceInfo.isTemp ? checkIn : checkOut);
-  document.getElementById('summaryNights').textContent = priceInfo.isTemp ? 'ชั่วคราว' : (priceInfo.nights + ' คืน');
-  document.getElementById('summaryTotal').textContent = money(priceInfo.total);
+  function showBookingSummary(code){
+    bookingCounter++;
 
-  bookingModal.hide();
-  setTimeout(()=> summaryModal.show(), 350);
+    // เพิ่มเข้ารายการจอง (เชื่อมกับระบบ Admin ฝั่ง demo/ในหน่วยความจำ)
+    bookings.unshift({
+      code, name, phone,
+      type: item.name,
+      checkIn, checkOut: finalCheckOut,
+      guests, total: priceInfo.total,
+      status:'รอดำเนินการ'
+    });
 
-  refreshAdminData();
+    // แสดง Popup สรุปรายการจอง
+    document.getElementById('summaryBookingCode').textContent = code;
+    document.getElementById('summaryName').textContent = name;
+    document.getElementById('summaryRoom').textContent = item.name;
+    document.getElementById('summaryDates').textContent = checkIn + ' ถึง ' + finalCheckOut;
+    document.getElementById('summaryNights').textContent = priceInfo.isTemp ? 'ชั่วคราว' : (priceInfo.nights + ' คืน');
+    document.getElementById('summaryTotal').textContent = money(priceInfo.total);
+
+    bookingModal.hide();
+    setTimeout(()=> summaryModal.show(), 350);
+
+    refreshAdminData();
+  }
+
+  function resetSubmitBtn(){
+    if(submitBtn){
+      submitBtn.disabled = false;
+      submitBtn.innerHTML = submitBtnOriginalHtml;
+    }
+  }
+
+  if(!GasConnector.isConfigured()){
+    // ยังไม่ได้ตั้งค่า GAS_URL -> ทำงานแบบ demo (ไม่บันทึกลง Google Sheet จริง)
+    showToast('ยังไม่ได้เชื่อมต่อ Google Sheet (ตั้งค่า GAS_URL ในไฟล์ config.js) — บันทึกแบบ demo เท่านั้น', 'error');
+    resetSubmitBtn();
+    showBookingSummary('BK' + bookingCounter);
+    return;
+  }
+
+  GasConnector.submitBooking(payload)
+    .then(res=>{
+      resetSubmitBtn();
+      if(res && res.result === 'success'){
+        showToast('บันทึกการจองลง Google Sheet สำเร็จ');
+        showBookingSummary(res.bookingId || ('BK' + bookingCounter));
+      } else {
+        showToast('บันทึกการจองไม่สำเร็จ: ' + (res && res.message ? res.message : 'เกิดข้อผิดพลาด'), 'error');
+      }
+    })
+    .catch(err=>{
+      resetSubmitBtn();
+      showToast('เชื่อมต่อ Google Sheet ไม่สำเร็จ: ' + err.message, 'error');
+    });
 });
+
 
 /* ================================================================
    ADMIN: LOGIN / LOGOUT / NAVIGATION
@@ -1726,6 +1859,7 @@ function initAdminUI(){
   refreshDashboardStats();
   renderDashChart();
   renderRevenueChart('daily');
+  loadBookingsFromSheet(); // โหลดรายการจองจริงจาก Google Sheet มาแทนที่ข้อมูล demo
 }
 
 function refreshAdminData(){
@@ -1734,6 +1868,7 @@ function refreshAdminData(){
     renderAdminBookings();
     renderAdminCustomers();
     refreshDashboardStats();
+    loadBookingsFromSheet();
   }
 }
 
@@ -1928,7 +2063,7 @@ function renderAdminBookings(){
       <td>${b.checkOut}</td>
       <td>
         <select class="form-select form-select-sm" style="width:140px" onchange="updateBookingStatus(${i}, this.value)">
-          ${['รอดำเนินการ','ยืนยัน','เข้าพัก','Checkout','ยกเลิก'].map(s=>`<option ${s===b.status?'selected':''}>${s}</option>`).join('')}
+          ${['รออนุมัติ','รอดำเนินการ','ยืนยัน','เข้าพัก','Checkout','ยกเลิก'].map(s=>`<option ${s===b.status?'selected':''}>${s}</option>`).join('')}
         </select>
       </td>
     </tr>`).join('');
@@ -1937,6 +2072,40 @@ function updateBookingStatus(i, status){
   bookings[i].status = status;
   renderAdminBookings(); refreshDashboardStats();
   showToast('อัปเดตสถานะการจอง ' + bookings[i].code + ' เป็น "' + status + '"');
+
+  // ซิงก์สถานะกลับไปที่ Google Sheet (คอลัมน์ J) ผ่านรหัสการจอง
+  if(GasConnector.isConfigured()){
+    GasConnector.updateBookingStatus(bookings[i].code, status).then(res=>{
+      if(!res || res.result !== 'success'){
+        showToast('อัปเดตสถานะใน Google Sheet ไม่สำเร็จ: ' + (res && res.message ? res.message : 'เกิดข้อผิดพลาด'), 'error');
+      }
+    });
+  }
+}
+
+/* โหลดรายการจองจริงจาก Google Sheet มาแทนที่ข้อมูล demo ในหน่วยความจำ */
+function loadBookingsFromSheet(){
+  if(!GasConnector.isConfigured()) return;
+  GasConnector.fetchBookings().then(res=>{
+    if(res && res.result === 'success' && Array.isArray(res.bookings)){
+      bookings = res.bookings.map(b=>({
+        code: b.bookingId,
+        name: b.guestName,
+        phone: b.phone,
+        type: b.roomType,
+        checkIn: b.checkIn,
+        checkOut: b.checkOut,
+        guests: b.guests,
+        total: Number(b.price) || 0,
+        status: b.status || 'รออนุมัติ'
+      }));
+      renderAdminBookings();
+      renderAdminCustomers();
+      refreshDashboardStats();
+    } else if(res && res.result === 'error'){
+      showToast('โหลดรายการจองจาก Google Sheet ไม่สำเร็จ: ' + res.message, 'error');
+    }
+  });
 }
 
 /* ================================================================
@@ -2041,6 +2210,7 @@ document.getElementById('settingsForm').addEventListener('submit', function(e){
 
   showToast('บันทึกการตั้งค่าเว็บไซต์สำเร็จ');
 });
+
 
 /* ================================================================
    INIT (โหลดครั้งแรก)
