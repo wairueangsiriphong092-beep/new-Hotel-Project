@@ -33,6 +33,543 @@
             opacity: 0.65;
         }
     </style>
+
+
+    <!-- Dashboard visual enhancement: added without changing existing logic -->
+    <style>
+        /* Dashboard shell */
+        #dashboardView {
+            position: relative;
+            overflow: hidden;
+            background:
+                radial-gradient(circle at top right, rgba(59,130,246,.16), transparent 34%),
+                radial-gradient(circle at bottom left, rgba(14,165,233,.12), transparent 32%),
+                rgba(255,255,255,.96);
+            border: 1px solid rgba(255,255,255,.75);
+            box-shadow: 0 28px 70px rgba(15,23,42,.22), 0 8px 24px rgba(59,130,246,.10);
+        }
+
+        #dashboardView::before {
+            content: '';
+            position: absolute;
+            inset: 0 0 auto 0;
+            height: 5px;
+            background: linear-gradient(90deg, #2563eb, #06b6d4, #22c55e);
+        }
+
+        #dashboardView > div:first-child {
+            padding: 8px 4px 18px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        #dashboardView h2 {
+            font-size: clamp(1.65rem, 3vw, 2.25rem);
+            letter-spacing: -.025em;
+            background: linear-gradient(90deg, #0f172a, #2563eb);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+
+        #lastUpdated {
+            display: inline-flex;
+            align-items: center;
+            gap: .45rem;
+            margin-top: .45rem;
+        }
+
+        #lastUpdated::before {
+            content: '';
+            width: .55rem;
+            height: .55rem;
+            border-radius: 999px;
+            background: #22c55e;
+            box-shadow: 0 0 0 5px rgba(34,197,94,.12);
+        }
+
+        #refreshButton {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 44px;
+            padding-inline: 1.15rem;
+            border: 1px solid #bfdbfe;
+            background: linear-gradient(135deg, #eff6ff, #dbeafe);
+            color: #1d4ed8;
+            box-shadow: 0 8px 20px rgba(37,99,235,.12);
+            transition: transform .2s ease, box-shadow .2s ease, background .2s ease;
+        }
+
+        #refreshButton:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 28px rgba(37,99,235,.18);
+            background: linear-gradient(135deg, #dbeafe, #bfdbfe);
+        }
+
+        /* Summary cards */
+        #dashboardView .grid.grid-cols-1.sm\:grid-cols-3 > div {
+            position: relative;
+            overflow: hidden;
+            padding: 1.25rem;
+            border: 1px solid rgba(255,255,255,.9);
+            box-shadow: 0 14px 32px rgba(15,23,42,.09);
+            transition: transform .22s ease, box-shadow .22s ease;
+        }
+
+        #dashboardView .grid.grid-cols-1.sm\:grid-cols-3 > div:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 18px 38px rgba(15,23,42,.14);
+        }
+
+        #dashboardView .grid.grid-cols-1.sm\:grid-cols-3 > div::after {
+            content: '';
+            position: absolute;
+            right: -20px;
+            top: -20px;
+            width: 90px;
+            height: 90px;
+            border-radius: 999px;
+            background: currentColor;
+            opacity: .08;
+        }
+
+        #dashboardView .grid.grid-cols-1.sm\:grid-cols-3 > div:nth-child(1) {
+            background: linear-gradient(135deg, #eff6ff, #dbeafe);
+            border-color: #bfdbfe;
+        }
+
+        #dashboardView .grid.grid-cols-1.sm\:grid-cols-3 > div:nth-child(2) {
+            background: linear-gradient(135deg, #f0fdf4, #dcfce7);
+            border-color: #bbf7d0;
+        }
+
+        #dashboardView .grid.grid-cols-1.sm\:grid-cols-3 > div:nth-child(3) {
+            background: linear-gradient(135deg, #fff1f2, #fee2e2);
+            border-color: #fecaca;
+        }
+
+        #totalCount, #successCount, #problemCount {
+            margin-top: .35rem;
+            line-height: 1;
+            letter-spacing: -.04em;
+        }
+
+        /* Filter controls */
+        #searchInput, #filterDate, #filterStatus {
+            min-height: 54px;
+            border-color: #dbe4f0;
+            background-color: rgba(255,255,255,.92);
+            box-shadow: 0 6px 18px rgba(15,23,42,.06);
+            outline: none;
+            transition: border-color .2s ease, box-shadow .2s ease, transform .2s ease;
+        }
+
+        #searchInput:focus, #filterDate:focus, #filterStatus:focus {
+            border-color: #60a5fa;
+            box-shadow: 0 0 0 4px rgba(59,130,246,.12), 0 8px 22px rgba(15,23,42,.08);
+            transform: translateY(-1px);
+        }
+
+        /* Table */
+        #dashboardView .overflow-x-auto {
+            border: 1px solid #e2e8f0;
+            border-radius: 1.25rem;
+            background: rgba(255,255,255,.94);
+            box-shadow: 0 16px 36px rgba(15,23,42,.08);
+        }
+
+        #dashboardView table {
+            overflow: hidden;
+        }
+
+        #dashboardView thead {
+            background: linear-gradient(90deg, #0f172a, #1e3a8a);
+            color: white;
+        }
+
+        #dashboardView thead tr {
+            border-bottom: 0;
+        }
+
+        #dashboardView th {
+            padding-top: 1rem;
+            padding-bottom: 1rem;
+            font-weight: 600;
+            letter-spacing: .01em;
+            white-space: nowrap;
+        }
+
+        #dashboardTableBody tr {
+            transition: background-color .18s ease, transform .18s ease;
+        }
+
+        #dashboardTableBody tr:nth-child(even) {
+            background: #f8fafc;
+        }
+
+        #dashboardTableBody tr:hover {
+            background: #eff6ff;
+        }
+
+        #dashboardTableBody td {
+            border-bottom: 1px solid #eef2f7;
+            vertical-align: middle;
+        }
+
+        #dashboardTableBody tr:last-child td {
+            border-bottom: 0;
+        }
+
+        #dashboardMessage {
+            border: 1px solid currentColor;
+            box-shadow: 0 8px 22px rgba(15,23,42,.06);
+        }
+
+        #dashboardView > button:last-child {
+            display: inline-flex;
+            align-items: center;
+            gap: .4rem;
+            padding: .7rem 1rem;
+            border-radius: .85rem;
+            text-decoration: none;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            transition: all .2s ease;
+        }
+
+        #dashboardView > button:last-child:hover {
+            background: #eef2ff;
+            color: #1d4ed8;
+            border-color: #c7d2fe;
+            transform: translateX(-2px);
+        }
+
+        @media (max-width: 640px) {
+            #dashboardView {
+                padding: 1rem;
+                border-radius: 1.5rem;
+            }
+
+            #dashboardView .grid.grid-cols-1.sm\:grid-cols-3 > div {
+                padding: 1rem;
+            }
+
+            #dashboardView th, #dashboardView td {
+                padding: .85rem;
+            }
+        }
+    </style>
+
+
+
+    <!-- Login and form visual enhancement: styles only, original data and logic unchanged -->
+    <style>
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            background:
+                linear-gradient(135deg, rgba(15,23,42,.45), rgba(30,64,175,.18) 42%, rgba(14,165,233,.12)),
+                radial-gradient(circle at 15% 15%, rgba(255,255,255,.22), transparent 28%),
+                radial-gradient(circle at 85% 80%, rgba(59,130,246,.18), transparent 30%);
+            z-index: -1;
+        }
+
+        #loginView,
+        #appView {
+            position: relative;
+            overflow: hidden;
+            border: 1px solid rgba(255,255,255,.75);
+            background:
+                radial-gradient(circle at top right, rgba(59,130,246,.15), transparent 32%),
+                radial-gradient(circle at bottom left, rgba(14,165,233,.10), transparent 30%),
+                rgba(255,255,255,.96);
+            box-shadow: 0 28px 75px rgba(15,23,42,.28), 0 10px 30px rgba(37,99,235,.12);
+        }
+
+        #loginView::before,
+        #appView::before {
+            content: '';
+            position: absolute;
+            inset: 0 0 auto 0;
+            height: 6px;
+            background: linear-gradient(90deg, #1d4ed8, #0ea5e9, #14b8a6);
+        }
+
+        #loginView::after {
+            content: '';
+            display: block;
+            width: max-content;
+            margin: -1rem auto 1.5rem;
+            padding: .4rem .85rem;
+            border-radius: 999px;
+            font-size: .7rem;
+            font-weight: 600;
+            letter-spacing: .14em;
+            color: #1d4ed8;
+            background: #eff6ff;
+            border: 1px solid #bfdbfe;
+        }
+
+        #loginView h1 {
+            margin-bottom: 2rem;
+            padding-top: .55rem;
+            font-size: clamp(1.75rem, 5vw, 2.3rem);
+            letter-spacing: -.03em;
+            background: linear-gradient(90deg, #0f172a, #1d4ed8, #0891b2);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+
+        #loginView h1::before {
+            content: '🏨';
+            display: block;
+            width: 76px;
+            height: 76px;
+            margin: 0 auto 1rem;
+            border-radius: 24px;
+            font-size: 2.1rem;
+            line-height: 76px;
+            background: linear-gradient(145deg, #dbeafe, #eff6ff);
+            border: 1px solid #bfdbfe;
+            box-shadow: 0 14px 28px rgba(37,99,235,.16);
+        }
+
+        #username,
+        #password {
+            min-height: 58px;
+            border: 1px solid #dbe4f0;
+            background: rgba(255,255,255,.96);
+            box-shadow: 0 7px 20px rgba(15,23,42,.06);
+            transition: border-color .2s ease, box-shadow .2s ease, transform .2s ease;
+        }
+
+        #username:hover,
+        #password:hover {
+            border-color: #93c5fd;
+        }
+
+        #username:focus,
+        #password:focus {
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 4px rgba(59,130,246,.13), 0 10px 26px rgba(15,23,42,.08);
+            transform: translateY(-1px);
+        }
+
+        #loginButton,
+        #saveButton {
+            position: relative;
+            overflow: hidden;
+            border: 1px solid rgba(255,255,255,.28);
+            background: linear-gradient(135deg, #1d4ed8, #2563eb 48%, #0891b2);
+            box-shadow: 0 14px 30px rgba(37,99,235,.28);
+            transition: transform .2s ease, box-shadow .2s ease, filter .2s ease;
+        }
+
+        #loginButton:hover:not(:disabled),
+        #saveButton:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 18px 38px rgba(37,99,235,.36);
+            filter: saturate(1.08);
+        }
+
+        #loginButton::after,
+        #saveButton::after {
+            content: '';
+            position: absolute;
+            top: -120%;
+            left: -30%;
+            width: 35%;
+            height: 340%;
+            transform: rotate(28deg);
+            background: rgba(255,255,255,.22);
+            transition: left .55s ease;
+        }
+
+        #loginButton:hover::after,
+        #saveButton:hover::after {
+            left: 115%;
+        }
+
+        #loginError {
+            padding: .85rem 1rem;
+            border-radius: 1rem;
+            background: #fff1f2;
+            border: 1px solid #fecdd3;
+            box-shadow: 0 8px 20px rgba(225,29,72,.08);
+        }
+
+        #appView > div:first-child {
+            padding: .35rem .2rem 1.25rem;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        #appView h2 {
+            font-size: clamp(1.55rem, 4vw, 2.05rem);
+            letter-spacing: -.025em;
+            background: linear-gradient(90deg, #0f172a, #1d4ed8);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+
+        #currentUserLabel {
+            display: inline-flex;
+            align-items: center;
+            gap: .45rem;
+            margin-top: .55rem;
+            padding: .35rem .7rem;
+            border-radius: 999px;
+            background: #f0fdf4;
+            color: #15803d;
+            border: 1px solid #bbf7d0;
+            font-weight: 500;
+        }
+
+        #currentUserLabel::before {
+            content: '';
+            width: .5rem;
+            height: .5rem;
+            border-radius: 999px;
+            background: #22c55e;
+            box-shadow: 0 0 0 4px rgba(34,197,94,.12);
+        }
+
+        #appView > div:first-child button {
+            padding: .65rem 1rem;
+            border-radius: .9rem;
+            text-decoration: none;
+            background: linear-gradient(135deg, #eff6ff, #dbeafe);
+            border: 1px solid #bfdbfe;
+            box-shadow: 0 8px 20px rgba(37,99,235,.10);
+        }
+
+        #appView > div:first-child button:hover {
+            background: linear-gradient(135deg, #dbeafe, #bfdbfe);
+            transform: translateY(-1px);
+        }
+
+        #appView > .space-y-6 > div {
+            padding: 1.15rem;
+            border-radius: 1.25rem;
+            background: rgba(248,250,252,.8);
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 8px 22px rgba(15,23,42,.045);
+        }
+
+        #appView label.block {
+            display: flex;
+            align-items: center;
+            gap: .55rem;
+            margin-bottom: .85rem;
+            color: #1e293b;
+        }
+
+        #appView label.block::before {
+            content: '';
+            width: .55rem;
+            height: 1.3rem;
+            border-radius: 999px;
+            background: linear-gradient(#2563eb, #06b6d4);
+        }
+
+        #locationSelect,
+        #statusSelect,
+        #reasonInput {
+            min-height: 56px;
+            border-color: #dbe4f0;
+            box-shadow: 0 6px 18px rgba(15,23,42,.055);
+            transition: border-color .2s ease, box-shadow .2s ease, transform .2s ease;
+        }
+
+        #locationSelect:focus,
+        #statusSelect:focus,
+        #reasonInput:focus {
+            border-color: #60a5fa;
+            box-shadow: 0 0 0 4px rgba(59,130,246,.12), 0 9px 22px rgba(15,23,42,.07);
+            transform: translateY(-1px);
+        }
+
+        .item-card {
+            min-height: 64px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-color: #dbe4f0;
+            background: linear-gradient(145deg, #ffffff, #f8fafc);
+            box-shadow: 0 7px 18px rgba(15,23,42,.06);
+        }
+
+        .item-card:hover {
+            transform: translateY(-2px);
+            border-color: #60a5fa;
+            box-shadow: 0 12px 24px rgba(37,99,235,.12);
+        }
+
+        .item-check:checked + .item-card {
+            color: #1d4ed8;
+            background: linear-gradient(145deg, #eff6ff, #dbeafe);
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59,130,246,.10), 0 12px 26px rgba(37,99,235,.16);
+        }
+
+        #itemChecklist > label:last-child {
+            background: linear-gradient(135deg, #f8fafc, #eff6ff);
+            border-color: #93c5fd;
+            transition: transform .2s ease, box-shadow .2s ease, background .2s ease;
+        }
+
+        #itemChecklist > label:last-child:hover {
+            transform: translateY(-1px);
+            background: linear-gradient(135deg, #eff6ff, #dbeafe);
+            box-shadow: 0 10px 24px rgba(37,99,235,.10);
+        }
+
+        #checkAll {
+            accent-color: #2563eb;
+        }
+
+        #reasonContainer {
+            padding-top: .25rem;
+        }
+
+        #saveStatus {
+            border: 1px solid currentColor;
+            box-shadow: 0 9px 24px rgba(15,23,42,.07);
+        }
+
+        @media (max-width: 640px) {
+            #loginView,
+            #appView {
+                border-radius: 1.55rem;
+            }
+
+            #loginView {
+                padding: 1.4rem;
+            }
+
+            #appView {
+                padding: 1rem;
+            }
+
+            #appView > div:first-child {
+                align-items: flex-start;
+                gap: .75rem;
+            }
+
+            #appView > div:first-child button {
+                white-space: nowrap;
+                font-size: .88rem;
+            }
+
+            #appView > .space-y-6 > div {
+                padding: .95rem;
+            }
+        }
+    </style>
+
 </head>
 <body class="min-h-screen p-4 md:p-8">
 
