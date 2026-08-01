@@ -570,6 +570,133 @@
         }
     </style>
 
+
+
+    <!-- Inspection zone card enhancement -->
+    <style>
+        .inspection-option {
+            display: block;
+        }
+
+        #itemChecklist .inspection-card {
+            position: relative;
+            min-height: 118px;
+            justify-content: flex-start;
+            gap: 1rem;
+            padding: 1.1rem;
+            text-align: left;
+            overflow: hidden;
+            border: 1px solid #dbeafe;
+            background: linear-gradient(145deg, rgba(255,255,255,.98), rgba(239,246,255,.78));
+        }
+
+        #itemChecklist .inspection-card::before {
+            content: '';
+            position: absolute;
+            width: 90px;
+            height: 90px;
+            right: -35px;
+            bottom: -42px;
+            border-radius: 999px;
+            background: rgba(59,130,246,.08);
+            transition: transform .25s ease, background .25s ease;
+        }
+
+        #itemChecklist .inspection-option:hover .inspection-card::before {
+            transform: scale(1.25);
+            background: rgba(59,130,246,.13);
+        }
+
+        .inspection-icon {
+            flex: 0 0 auto;
+            display: grid;
+            place-items: center;
+            width: 58px;
+            height: 58px;
+            border-radius: 18px;
+            font-size: 1.75rem;
+            background: linear-gradient(145deg, #dbeafe, #eff6ff);
+            border: 1px solid #bfdbfe;
+            box-shadow: 0 10px 22px rgba(37,99,235,.13);
+        }
+
+        .bathroom-icon { background: linear-gradient(145deg, #cffafe, #ecfeff); border-color: #a5f3fc; }
+        .amenity-icon { background: linear-gradient(145deg, #ede9fe, #f5f3ff); border-color: #ddd6fe; }
+        .safety-icon { background: linear-gradient(145deg, #dcfce7, #f0fdf4); border-color: #bbf7d0; }
+
+        .inspection-content {
+            display: flex;
+            flex-direction: column;
+            gap: .32rem;
+            min-width: 0;
+            padding-right: 1.7rem;
+        }
+
+        .inspection-title {
+            color: #0f172a;
+            font-size: 1.02rem;
+            font-weight: 700;
+            line-height: 1.35;
+        }
+
+        .inspection-description {
+            color: #64748b;
+            font-size: .78rem;
+            font-weight: 400;
+            line-height: 1.5;
+        }
+
+        .inspection-check {
+            position: absolute;
+            top: .8rem;
+            right: .8rem;
+            display: grid;
+            place-items: center;
+            width: 27px;
+            height: 27px;
+            border-radius: 999px;
+            color: transparent;
+            background: #f8fafc;
+            border: 2px solid #cbd5e1;
+            font-size: .85rem;
+            font-weight: 800;
+            transition: all .2s ease;
+        }
+
+        #itemChecklist .item-check:checked + .inspection-card .inspection-check {
+            color: #fff;
+            border-color: #2563eb;
+            background: #2563eb;
+            box-shadow: 0 0 0 4px rgba(37,99,235,.12);
+        }
+
+        #itemChecklist .item-check:checked + .inspection-card .inspection-title {
+            color: #1d4ed8;
+        }
+
+        #itemChecklist > label:last-child {
+            grid-column: 1 / -1;
+        }
+
+        @media (max-width: 640px) {
+            #itemChecklist .inspection-card {
+                min-height: 108px;
+                gap: .8rem;
+                padding: .95rem;
+            }
+
+            .inspection-icon {
+                width: 50px;
+                height: 50px;
+                border-radius: 15px;
+                font-size: 1.5rem;
+            }
+
+            .inspection-title { font-size: .96rem; }
+            .inspection-description { font-size: .74rem; }
+        }
+    </style>
+
 </head>
 <body class="min-h-screen p-4 md:p-8">
 
@@ -600,22 +727,50 @@
 
             <div>
                 <label class="block text-lg font-semibold mb-4 text-gray-700">รายการที่ตรวจ</label>
-                <div class="grid grid-cols-2 gap-3" id="itemChecklist">
-                    <label class="relative">
-                        <input type="checkbox" value="เตียง" class="item-check hidden">
-                        <div class="item-card p-4 rounded-2xl text-center font-medium bg-white">เตียง</div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4" id="itemChecklist">
+                    <label class="relative inspection-option">
+                        <input type="checkbox" value="โซนห้องนอน" class="item-check hidden">
+                        <div class="item-card inspection-card p-4 rounded-2xl font-medium bg-white">
+                            <div class="inspection-icon bedroom-icon" aria-hidden="true">🛏️</div>
+                            <div class="inspection-content">
+                                <span class="inspection-title">โซนห้องนอน</span>
+                                <span class="inspection-description">เตียง เครื่องนอน พื้น ผนัง และความเรียบร้อย</span>
+                            </div>
+                            <span class="inspection-check" aria-hidden="true">✓</span>
+                        </div>
                     </label>
-                    <label class="relative">
-                        <input type="checkbox" value="ห้องน้ำ" class="item-check hidden">
-                        <div class="item-card p-4 rounded-2xl text-center font-medium bg-white">ห้องน้ำ</div>
+                    <label class="relative inspection-option">
+                        <input type="checkbox" value="โซนห้องน้ำ" class="item-check hidden">
+                        <div class="item-card inspection-card p-4 rounded-2xl font-medium bg-white">
+                            <div class="inspection-icon bathroom-icon" aria-hidden="true">🚿</div>
+                            <div class="inspection-content">
+                                <span class="inspection-title">โซนห้องน้ำ</span>
+                                <span class="inspection-description">สุขภัณฑ์ ความสะอาด น้ำใช้ และการระบายน้ำ</span>
+                            </div>
+                            <span class="inspection-check" aria-hidden="true">✓</span>
+                        </div>
                     </label>
-                    <label class="relative">
-                        <input type="checkbox" value="แอร์" class="item-check hidden">
-                        <div class="item-card p-4 rounded-2xl text-center font-medium bg-white">แอร์</div>
+                    <label class="relative inspection-option">
+                        <input type="checkbox" value="สิ่งอำนวยความสะดวก" class="item-check hidden">
+                        <div class="item-card inspection-card p-4 rounded-2xl font-medium bg-white">
+                            <div class="inspection-icon amenity-icon" aria-hidden="true">❄️</div>
+                            <div class="inspection-content">
+                                <span class="inspection-title">สิ่งอำนวยความสะดวก</span>
+                                <span class="inspection-description">แอร์ โทรทัศน์ ตู้เย็น ไฟส่องสว่าง และอุปกรณ์</span>
+                            </div>
+                            <span class="inspection-check" aria-hidden="true">✓</span>
+                        </div>
                     </label>
-                    <label class="relative">
-                        <input type="checkbox" value="ฝักบัว" class="item-check hidden">
-                        <div class="item-card p-4 rounded-2xl text-center font-medium bg-white">ฝักบัว</div>
+                    <label class="relative inspection-option">
+                        <input type="checkbox" value="ภาพรวมความปลอดภัย" class="item-check hidden">
+                        <div class="item-card inspection-card p-4 rounded-2xl font-medium bg-white">
+                            <div class="inspection-icon safety-icon" aria-hidden="true">🛡️</div>
+                            <div class="inspection-content">
+                                <span class="inspection-title">ภาพรวมความปลอดภัย</span>
+                                <span class="inspection-description">ประตู หน้าต่าง ระบบไฟ ทางเดิน และจุดเสี่ยง</span>
+                            </div>
+                            <span class="inspection-check" aria-hidden="true">✓</span>
+                        </div>
                     </label>
                     <label class="col-span-2 mt-2 flex items-center justify-center space-x-3 p-4 bg-gray-50 rounded-2xl border-2 border-dashed border-gray-300 cursor-pointer hover:bg-gray-100">
                         <input type="checkbox" id="checkAll" onclick="toggleAll()" class="w-5 h-5">
@@ -811,8 +966,15 @@
         function toggleReason() {
             const status = document.getElementById('statusSelect').value;
             const reasonContainer = document.getElementById('reasonContainer');
-            reasonContainer.classList.toggle('hidden', status !== 'ไม่เรียบร้อย');
-            if (status === 'เรียบร้อย') document.getElementById('reasonInput').value = '';
+            const reasonInput = document.getElementById('reasonInput');
+            const mustEnterReason = status === 'ไม่เรียบร้อย';
+
+            // แสดงและบังคับกรอกสาเหตุเฉพาะสถานะไม่เรียบร้อยเท่านั้น
+            reasonContainer.classList.toggle('hidden', !mustEnterReason);
+            if (reasonInput) {
+                reasonInput.required = mustEnterReason;
+                if (!mustEnterReason) reasonInput.value = '';
+            }
         }
 
         async function submitRecord() {
@@ -825,7 +987,7 @@
 
             if (!location) return alert('โปรดเลือกสถานที่');
             if (selectedItems.length === 0 && !isAllChecked) return alert('โปรดเลือกจุดที่ตรวจ');
-            if (status === 'ไม่เรียบร้อย' && !reason) return alert('โปรดระบุสาเหตุที่ไม่เรียบร้อย');
+            if (status === 'ไม่เรียบร้อย' && !reason) return alert('กรุณาระบุสาเหตุที่ไม่เรียบร้อย');
 
             const record = {
                 location,
@@ -1477,21 +1639,27 @@
             const statusSelect = document.getElementById('statusSelect');
             const resolvedContainer = document.getElementById('resolvedNoteContainer');
             const reasonContainer = document.getElementById('reasonContainer');
+            const reasonInput = document.getElementById('reasonInput');
+            const resolvedNoteInput = document.getElementById('resolvedNoteInput');
 
             if (!statusSelect || !resolvedContainer) return;
 
-            const isResolved = statusSelect.value === 'แก้ไขเรียบร้อยแล้ว';
-            resolvedContainer.classList.toggle('hidden', !isResolved);
+            const status = statusSelect.value;
+            const isProblem = status === 'ไม่เรียบร้อย';
+            const isResolved = status === 'แก้ไขเรียบร้อยแล้ว';
 
-            if (isResolved && reasonContainer) {
-                reasonContainer.classList.add('hidden');
-                const reasonInput = document.getElementById('reasonInput');
-                if (reasonInput) reasonInput.value = '';
+            // ไม่เรียบร้อย: แสดงช่องสาเหตุ
+            if (reasonContainer) reasonContainer.classList.toggle('hidden', !isProblem);
+            if (reasonInput) {
+                reasonInput.required = isProblem;
+                if (!isProblem) reasonInput.value = '';
             }
 
-            if (!isResolved) {
-                const resolvedNoteInput = document.getElementById('resolvedNoteInput');
-                if (resolvedNoteInput) resolvedNoteInput.value = '';
+            // แก้ไขเรียบร้อยแล้ว: แสดงช่องหมายเหตุการแก้ไข
+            resolvedContainer.classList.toggle('hidden', !isResolved);
+            if (resolvedNoteInput) {
+                resolvedNoteInput.required = isResolved;
+                if (!isResolved) resolvedNoteInput.value = '';
             }
         }
 
